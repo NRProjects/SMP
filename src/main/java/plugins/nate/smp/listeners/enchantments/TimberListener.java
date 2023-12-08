@@ -1,6 +1,5 @@
 package plugins.nate.smp.listeners.enchantments;
 
-import net.coreprotect.CoreProtectAPI;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -11,15 +10,11 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.inventory.ItemStack;
 import plugins.nate.smp.SMP;
 import plugins.nate.smp.managers.EnchantmentManager;
-import plugins.nate.smp.utils.ChatUtils;
 import plugins.nate.smp.utils.SMPUtils;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-
-import static plugins.nate.smp.utils.ChatUtils.PREFIX;
-import static plugins.nate.smp.utils.ChatUtils.sendMessage;
 
 
 public class TimberListener implements Listener {

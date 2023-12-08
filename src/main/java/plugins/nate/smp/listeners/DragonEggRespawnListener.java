@@ -1,6 +1,5 @@
 package plugins.nate.smp.listeners;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;

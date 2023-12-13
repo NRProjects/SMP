@@ -2,9 +2,13 @@ package plugins.nate.smp.commands;
 
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.block.Block;
+import org.bukkit.block.Container;
 import org.bukkit.command.*;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+
+import plugins.nate.smp.listeners.ChestLockListener;
 import plugins.nate.smp.managers.TrustManager;
 import plugins.nate.smp.utils.ChatUtils;
 import plugins.nate.smp.utils.SMPUtils;
@@ -15,7 +19,7 @@ import java.util.stream.Collectors;
 import static plugins.nate.smp.utils.ChatUtils.sendMessage;
 
 public class SMPCommand implements CommandExecutor, TabCompleter {
-    private static final Set<String> VALID_SUBCOMMANDS = Set.of("help", "features", "reload", "trust", "untrust", "trustlist");
+    private static final Set<String> VALID_SUBCOMMANDS = Set.of("help", "features", "reload", "trust", "untrust", "trustlist", "lock", "unlock");
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
@@ -106,6 +110,52 @@ public class SMPCommand implements CommandExecutor, TabCompleter {
                     .collect(Collectors.joining(", "));
 
             sendMessage(player, ChatUtils.PREFIX + "&aTrusted Players: " + trustedPlayerNames);
+        } else if (args[0].equalsIgnoreCase("lock")) {
+            if (!(sender instanceof Player)) {
+                sendMessage(sender, "&cOnly players can use this command!");
+                return true;
+            }
+
+            Player player = (Player) sender;
+            Block targetBlock = player.getTargetBlock(null, 5);
+            if (!(targetBlock.getState() instanceof Container)) {
+                sendMessage(sender, "&cNot a valid container.");
+                return true;
+            }
+            Container container = (Container) targetBlock;
+
+            // ChestLockListener chestLockListener = new ChestLockListener();
+            ChestLockListener.lockContainer(player.getUniqueId(), container);
+
+        } else if (args[0].equalsIgnoreCase("unlock")) {
+            if (!(sender instanceof Player)) {
+                sendMessage(sender, "&cOnly players can use this command!");
+                return true;
+            }
+            
+            Player player = (Player) sender;
+            Block targetBlock = player.getTargetBlock(null, 5);
+
+            if (!(targetBlock.getState() instanceof Container)) {
+                sendMessage(sender, "&cNot a valid container.");
+                return true;
+            }
+
+            Container container = (Container) targetBlock;
+            
+            if (sender.hasPermission("smp.bypasslocks") == false) {
+                sendMessage(sender, "&cYou don't have permission to do this!");
+                return true;
+            }
+
+            // ChestLockListener chestLockListener = new ChestLockListener();
+            UUID poppedUUID = ChestLockListener.unlockContainer(container);
+            if (poppedUUID == null) {
+                sendMessage(sender, "&cThere is no lock on this container.");
+                return true;
+            }
+
+            sendMessage(sender, "&aSuccesfully removed " + Bukkit.getServer().getOfflinePlayer(poppedUUID).getName() + " from the lock.");
         } else {
             sendMessage(sender, ChatUtils.PREFIX + "&cUnknown command");
         }

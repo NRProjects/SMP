@@ -11,6 +11,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import plugins.nate.smp.managers.ElytraGlidingTracker;
 import plugins.nate.smp.managers.EnchantmentManager;
 import plugins.nate.smp.managers.RecipeManager;
 import plugins.nate.smp.managers.TrustManager;
@@ -33,12 +34,12 @@ public final class SMP extends JavaPlugin {
     public final File prefixesFile = new File(getDataFolder() + "/prefixes.yml");
     public FileConfiguration prefixes;
 
+
     @Override
     public void onEnable() {
         super.onEnable();
         plugin = this;
         coreProtect = SMPUtils.loadCoreProtect();
-
 
         TrustManager.init(this.getDataFolder());
 
@@ -47,6 +48,7 @@ public final class SMP extends JavaPlugin {
         CommandRegistration.registerCommands(this);
         EnchantmentManager.registerEnchants();
         RecipeManager.registerRecipes();
+        ElytraGlidingTracker.startTracking();
 
         getPrefixes().options().copyDefaults(true);
         saveDefaultPrefixes();
@@ -76,7 +78,6 @@ public final class SMP extends JavaPlugin {
     public static CoreProtectAPI getCoreProtect() {
         return coreProtect;
     }
-
 
     public FileConfiguration getPrefixes() {
         if (prefixes == null) {
@@ -112,3 +113,4 @@ public final class SMP extends JavaPlugin {
         }
     }
 }
+

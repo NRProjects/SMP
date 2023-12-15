@@ -16,6 +16,7 @@ public class ElytraFallListener implements Listener {
             ElytraGlidingTracker.gliding.add(p);
         } else {
             ElytraGlidingTracker.gliding.remove(p);
+            ElytraGlidingTracker.lastLocationMap.remove(p);
         }
     }
 

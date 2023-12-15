@@ -46,16 +46,21 @@ public class ElytraGlidingTracker {
 
                     PlayerPoint playerPoint = lastLocationMap.get(player);
 
+                    Location lastLocation = playerPoint.location();
+                    if (player.getLocation().getWorld() != lastLocation.getWorld()) {
+                        lastLocationMap.remove(player);
+                        continue;
+                    }
+
+                    double distance = lastLocation.distance(player.getLocation());
+                    if (distance == 0) {
+                        continue;
+                    }
+
                     //Gets how long since we last calculated damage between two locations.
                     long elapsedTime = System.currentTimeMillis() - playerPoint.time();
                     if (elapsedTime == 0) {
-                        return;
-                    }
-
-                    Location lastLocation = playerPoint.location();
-                    double distance = lastLocation.distance(player.getLocation());
-                    if (distance == 0) {
-                        return;
+                        continue;
                     }
 
                     //Change in Y between player's current location and their "last" location

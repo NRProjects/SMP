@@ -3,20 +3,25 @@ package plugins.nate.smp.commands;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
-import org.bukkit.block.Container;
 import org.bukkit.block.Sign;
 import org.bukkit.block.sign.Side;
-import org.bukkit.command.*;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
+import plugins.nate.smp.managers.ClaimsManager;
 import plugins.nate.smp.managers.TrustManager;
+import plugins.nate.smp.objects.Claim;
 import plugins.nate.smp.utils.ChatUtils;
 import plugins.nate.smp.utils.SMPUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static plugins.nate.smp.utils.ChatUtils.PREFIX;
 import static plugins.nate.smp.utils.ChatUtils.sendMessage;
 
 public class SMPCommand implements CommandExecutor, TabCompleter {
@@ -40,7 +45,7 @@ public class SMPCommand implements CommandExecutor, TabCompleter {
 
         if (args[0].equalsIgnoreCase("reload")) {
             if (!sender.hasPermission("smp.reload")) {
-                sendMessage(sender, ChatUtils.PREFIX + ChatUtils.DENIED_COMMAND);
+                sendMessage(sender, PREFIX + ChatUtils.DENIED_COMMAND);
                 return true;
             }
 
@@ -51,24 +56,24 @@ public class SMPCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
             if (!sender.hasPermission("smp.forcelock")) {
-                sendMessage(sender, ChatUtils.PREFIX + ChatUtils.DENIED_COMMAND);
+                sendMessage(sender, PREFIX + ChatUtils.DENIED_COMMAND);
                 return true;
             }
             if (args.length == 1) {
-                sendMessage(sender, ChatUtils.PREFIX + "&cUsage: /smp forcelock <username>");
+                sendMessage(sender, PREFIX + "&cUsage: /smp forcelock <username>");
                 return true;
             }
             if (Bukkit.getOfflinePlayer(args[1]).hasPlayedBefore() == false) {
-                sendMessage(sender, ChatUtils.PREFIX + "&c" + args[1] + " is not a valid player!");
+                sendMessage(sender, PREFIX + "&c" + args[1] + " is not a valid player!");
                 return true;
             }
             Block targetBlock = player.getTargetBlockExact( 5);
             if (!(targetBlock.getState() instanceof Sign sign)) {
-                sendMessage(sender, ChatUtils.PREFIX + "&cMust be a targeting a sign.");
+                sendMessage(sender, PREFIX + "&cMust be a targeting a sign.");
                 return true;
             }
             OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(args[1]);
-            sendMessage(sender, ChatUtils.PREFIX + "&7Locking sign for &a" + offlinePlayer.getName());
+            sendMessage(sender, PREFIX + "&7Locking sign for &a" + offlinePlayer.getName());
             sign.getPersistentDataContainer().set(SMPUtils.OWNER_UUID_KEY, PersistentDataType.STRING, offlinePlayer.getUniqueId().toString());
             sign.getSide(Side.FRONT).setLine(0, "[LockedV2]");
             sign.getSide(Side.FRONT).setLine(1, offlinePlayer.getName());
@@ -81,18 +86,18 @@ public class SMPCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
             if (!sender.hasPermission("smp.lockinspect")) {
-                sendMessage(sender, ChatUtils.PREFIX + ChatUtils.DENIED_COMMAND);
+                sendMessage(sender, PREFIX + ChatUtils.DENIED_COMMAND);
                 return true;
             }
 
             Block targetBlock = player.getTargetBlockExact(5);
             if (!(targetBlock.getState() instanceof Sign sign)) {
-                sendMessage(sender, ChatUtils.PREFIX + "&cMust be a targeting a sign.");
+                sendMessage(sender, PREFIX + "&cMust be a targeting a sign.");
                 return true;
             }
             
             if (sign.getPersistentDataContainer().get(SMPUtils.OWNER_UUID_KEY, PersistentDataType.STRING) == null) {
-                sendMessage(sender, ChatUtils.PREFIX + "&cThis sign doesn't have a lock.");
+                sendMessage(sender, PREFIX + "&cThis sign doesn't have a lock.");
                 return true;
             }
             UUID signOwnerUUID = UUID.fromString(sign.getPersistentDataContainer().get(SMPUtils.OWNER_UUID_KEY, PersistentDataType.STRING)); 
@@ -100,11 +105,11 @@ public class SMPCommand implements CommandExecutor, TabCompleter {
             OfflinePlayer signOwner = Bukkit.getOfflinePlayer(signOwnerUUID);
             
             if (signOwner == null) {
-                sendMessage(sender, ChatUtils.PREFIX + "&cThe sign is locked, but the owner doesn't exist.");
+                sendMessage(sender, PREFIX + "&cThe sign is locked, but the owner doesn't exist.");
                 return true;
             }
             
-            sendMessage(sender, ChatUtils.PREFIX + "&a" + signOwner.getName() + " &7is the owner of this lock.");
+            sendMessage(sender, PREFIX + "&a" + signOwner.getName() + " &7is the owner of this lock.");
 
         } else if (args[0].equalsIgnoreCase("help")) {
             sendMessage(sender, "&8&m------------------------&8&l[&a&lSMP&8&l]&8&m------------------------");
@@ -127,18 +132,18 @@ public class SMPCommand implements CommandExecutor, TabCompleter {
             String action = args[0].toLowerCase();
 
             if (args.length != 2) {
-                sendMessage(sender, ChatUtils.PREFIX + "&cUsage: /smp " + action + " <player>");
+                sendMessage(sender, PREFIX + "&cUsage: /smp " + action + " <player>");
                 return true;
             }
 
             if (args[1].equalsIgnoreCase(player.getName())) {
-                sendMessage(sender, ChatUtils.PREFIX + "&cYou cannot " + action + " yourself!");
+                sendMessage(sender, PREFIX + "&cYou cannot " + action + " yourself!");
                 return true;
             }
 
             OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
             if (!target.hasPlayedBefore()) {
-                sendMessage(sender, ChatUtils.PREFIX + "&cPlayer not found");
+                sendMessage(sender, PREFIX + "&cPlayer not found");
                 return true;
             }
 
@@ -150,9 +155,9 @@ public class SMPCommand implements CommandExecutor, TabCompleter {
             }
 
             if (updated) {
-                sendMessage(sender, ChatUtils.PREFIX + "&aYou have " + action + "ed " + target.getName());
+                sendMessage(sender, PREFIX + "&aYou have " + action + "ed " + target.getName());
             } else {
-                sendMessage(sender, ChatUtils.PREFIX + "&cYou've already " + action + "ed that player");
+                sendMessage(sender, PREFIX + "&cYou've already " + action + "ed that player");
             }
         } else if (args[0].equalsIgnoreCase("trustlist")) {
             if (!(sender instanceof Player player)) {
@@ -161,7 +166,7 @@ public class SMPCommand implements CommandExecutor, TabCompleter {
 
             Set<UUID> trustedPlayers = TrustManager.getTrustedPlayers(player.getUniqueId());
             if (trustedPlayers.isEmpty()) {
-                sendMessage(player, ChatUtils.PREFIX + "&cYou have not trusted any players");
+                sendMessage(player, PREFIX + "&cYou have not trusted any players");
                 return true;
             }
 
@@ -171,9 +176,29 @@ public class SMPCommand implements CommandExecutor, TabCompleter {
                     .sorted()
                     .collect(Collectors.joining(", "));
 
-            sendMessage(player, ChatUtils.PREFIX + "&aTrusted Players: " + trustedPlayerNames);
+            sendMessage(player, PREFIX + "&aTrusted Players: " + trustedPlayerNames);
+        } else if (args[0].equalsIgnoreCase("claim")) {
+            if (!(sender instanceof Player player)) {
+                sendMessage(sender, "&cOnly players can use this command!");
+                return true;
+            }
+
+            if (args[1].equalsIgnoreCase("confirm")) {
+                if (ClaimsManager.hasNullSelectionPoint(player)) {
+                    sendMessage(player, PREFIX + "&cYou must select two points to make a claim!");
+                    return true;
+                }
+
+                Claim claim = new Claim(ClaimsManager.getPoints(player), player.getUniqueId());
+                sendMessage(player, claim.toString());
+
+                return true;
+            }
+
+            ClaimsManager.giveClaimTool(player);
+            sendMessage(player, PREFIX + "&aGranted claim tool in inventory");
         } else {
-            sendMessage(sender, ChatUtils.PREFIX + "&cUnknown command");
+            sendMessage(sender, PREFIX + "&cUnknown command");
         }
 
         return true;

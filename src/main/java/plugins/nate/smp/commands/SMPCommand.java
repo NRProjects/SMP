@@ -195,6 +195,17 @@ public class SMPCommand implements CommandExecutor, TabCompleter {
                 ClaimsManager.createClaim(claim);
 
                 return true;
+            } else if (args.length == 2 && args[1].equalsIgnoreCase("info")) {
+                Claim claim = ClaimsManager.getClaimAtLocation(player.getLocation());
+
+                if (claim == null) {
+                    sendMessage(player, PREFIX + "Claim is null");
+                    return true;
+                }
+
+                ClaimsManager.displayClaimBorder(claim, player);
+
+                return true;
             }
 
             ClaimsManager.giveClaimTool(player);

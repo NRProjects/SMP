@@ -121,11 +121,9 @@ public final class SMP extends JavaPlugin {
         return database;
     }
 
-    // TODO: READ THIS BELOW
-    /*
-    * Before logging off last night I got to the point of getting a Claim object created when running the correct commands.
-    * I also finished the /smp claim command and the sub command of /smp claim confirm.
-    * /smp claim confirm creates the claim object. I'm now on to storing the claim into a database
+    // TODO: Read this below
+    /* For claim border toggling I should make it a button you can click in chat from the info message created from /smp claim info, this button will toggle the border on and off
+    *
     * */
 }
 

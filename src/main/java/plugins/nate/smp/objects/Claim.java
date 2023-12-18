@@ -43,7 +43,7 @@ public class Claim {
     }
 
     public String getOwnerName() {
-        return Bukkit.getPlayer(owner).getDisplayName();
+        return Bukkit.getPlayer(owner).getName();
     }
 
     public boolean isInside(Location location) {

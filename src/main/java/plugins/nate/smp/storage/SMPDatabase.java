@@ -29,7 +29,8 @@ public class SMPDatabase {
                         "Pos1_Z INTEGER," +
                         "Pos2_Y INTEGER," +
                         "Pos2_X INTEGER," +
-                        "Pos2_Z INTEGER);";
+                        "Pos2_Z INTEGER," +
+                        "Members TEXT);";
 
                 statement.execute(sql);
             }

@@ -25,6 +25,7 @@ public class ClaimsManager {
     public static List<Claim> claims = new ArrayList<>();
     private static final String CLAIM_TOOL_NBT = "claim_tool";
     private static final Map<Player, Location[]> playerSelections = new HashMap<>();
+    private static final Map<UUID, Integer> borderDisplayTasks = new HashMap<>();
 
 
     public static void loadClaims() {
@@ -126,5 +127,60 @@ public class ClaimsManager {
         }
 
         return null;
+    }
+
+    public static void displayClaimBorder(Claim claim, Player player) {
+        UUID playerUUID = player.getUniqueId();
+
+        if (borderDisplayTasks.containsKey(playerUUID)) {
+            int taskId = borderDisplayTasks.get(playerUUID);
+            Bukkit.getScheduler().cancelTask(taskId);
+            borderDisplayTasks.remove(playerUUID);
+        } else {
+            int taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(SMP.getPlugin(), () -> {
+                World world = claim.getWorld();
+                Location pos1 = claim.getPos1();
+                Location pos2 = claim.getPos2();
+
+                int minX = Math.min(pos1.getBlockX(), pos2.getBlockX());
+                int maxX = Math.max(pos1.getBlockX(), pos2.getBlockX());
+                int minY = Math.min(pos1.getBlockY(), pos2.getBlockY());
+                int maxY = Math.max(pos1.getBlockY(), pos2.getBlockY());
+                int minZ = Math.min(pos1.getBlockZ(), pos2.getBlockZ());
+                int maxZ = Math.max(pos1.getBlockZ(), pos2.getBlockZ());
+
+                double step = 0.5;
+
+                for (double x = minX; x <= maxX; x += step) {
+                    spawnParticle(world, x, minY, minZ, player);
+                    spawnParticle(world, x, maxY, minZ, player);
+                    spawnParticle(world, x, minY, maxZ, player);
+                    spawnParticle(world, x, maxY, maxZ, player);
+                }
+                for (double y = minY; y <= maxY; y += step) {
+                    spawnParticle(world, minX, y, minZ, player);
+                    spawnParticle(world, maxX, y, minZ, player);
+                    spawnParticle(world, minX, y, maxZ, player);
+                    spawnParticle(world, maxX, y, maxZ, player);
+                }
+                for (double z = minZ; z <= maxZ; z += step) {
+                    spawnParticle(world, minX, minY, z, player);
+                    spawnParticle(world, maxX, minY, z, player);
+                    spawnParticle(world, minX, maxY, z, player);
+                    spawnParticle(world, maxX, maxY, z, player);
+                }
+            }, 0L, 10L);
+
+            borderDisplayTasks.put(playerUUID, taskId);
+        }
+
+
+    }
+
+    private static void spawnParticle(World world, double x, double y, double z, Player player) {
+        Location location = new Location(world, x, y, z);
+        Particle.DustOptions dustOptions = new Particle.DustOptions(Color.fromRGB(66, 135, 245), 1.0F);
+
+        player.spawnParticle(Particle.REDSTONE, location, 1, 0, 0, 0, 10, dustOptions);
     }
 }

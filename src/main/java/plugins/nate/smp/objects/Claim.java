@@ -1,5 +1,6 @@
 package plugins.nate.smp.objects;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.jetbrains.annotations.NotNull;
@@ -39,5 +40,20 @@ public class Claim {
 
     public Location[] getPoints() {
         return points;
+    }
+
+    public String getOwnerName() {
+        return Bukkit.getPlayer(owner).getDisplayName();
+    }
+
+    public boolean isInside(Location location) {
+        double minX = Math.min(points[0].getX(), points[1].getX());
+        double maxX = Math.max(points[0].getX(), points[1].getX());
+        double minZ= Math.min(points[0].getZ(), points[1].getZ());
+        double maxZ= Math.max(points[0].getZ(), points[1].getZ());
+
+        return location.getWorld().equals(world) &&
+                location.getX() >= minX && location.getX() <= maxX &&
+                location.getZ() >= minZ && location.getZ() <= maxZ;
     }
 }

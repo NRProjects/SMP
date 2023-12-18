@@ -183,7 +183,7 @@ public class SMPCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
 
-            if (args[1].equalsIgnoreCase("confirm")) {
+            if (args.length == 2 && args[1].equalsIgnoreCase("confirm")) {
                 if (ClaimsManager.hasNullSelectionPoint(player)) {
                     sendMessage(player, PREFIX + "&cYou must select two points to make a claim!");
                     return true;
@@ -191,6 +191,8 @@ public class SMPCommand implements CommandExecutor, TabCompleter {
 
                 Claim claim = new Claim(ClaimsManager.getPoints(player), player.getUniqueId());
                 sendMessage(player, claim.toString());
+
+                ClaimsManager.createClaim(claim);
 
                 return true;
             }

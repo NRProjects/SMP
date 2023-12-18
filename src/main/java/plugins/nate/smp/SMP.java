@@ -11,10 +11,8 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import plugins.nate.smp.managers.ElytraGlidingTracker;
-import plugins.nate.smp.managers.EnchantmentManager;
-import plugins.nate.smp.managers.RecipeManager;
-import plugins.nate.smp.managers.TrustManager;
+import plugins.nate.smp.managers.*;
+import plugins.nate.smp.storage.SMPDatabase;
 import plugins.nate.smp.utils.*;
 
 import java.io.File;
@@ -27,6 +25,7 @@ import java.util.logging.Logger;
 public final class SMP extends JavaPlugin {
     private static SMP plugin;
     private static CoreProtectAPI coreProtect;
+    private SMPDatabase database;
 
     public static StateFlag WITHER_EXPLOSIONS;
 
@@ -49,6 +48,11 @@ public final class SMP extends JavaPlugin {
         EnchantmentManager.registerEnchants();
         RecipeManager.registerRecipes();
         ElytraGlidingTracker.startTracking();
+
+        database = new SMPDatabase();
+        database.initialize();
+
+        ClaimsManager.loadClaims();
 
         getPrefixes().options().copyDefaults(true);
         saveDefaultPrefixes();
@@ -112,5 +116,16 @@ public final class SMP extends JavaPlugin {
             saveResource("prefixes.yml", false);
         }
     }
+
+    public SMPDatabase getDatabase() {
+        return database;
+    }
+
+    // TODO: READ THIS BELOW
+    /*
+    * Before logging off last night I got to the point of getting a Claim object created when running the correct commands.
+    * I also finished the /smp claim command and the sub command of /smp claim confirm.
+    * /smp claim confirm creates the claim object. I'm now on to storing the claim into a database
+    * */
 }
 

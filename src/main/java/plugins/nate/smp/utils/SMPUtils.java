@@ -10,8 +10,13 @@ import net.coreprotect.CoreProtectAPI;
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;
 import org.bukkit.event.HandlerList;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 import plugins.nate.smp.SMP;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static plugins.nate.smp.utils.ChatUtils.PREFIX;
 import static plugins.nate.smp.utils.ChatUtils.sendMessage;
@@ -79,5 +84,20 @@ public class SMPUtils {
                 material == Material.GOLDEN_AXE ||
                 material == Material.DIAMOND_AXE ||
                 material == Material.NETHERITE_AXE;
+    }
+
+    public static void changeItemName(ItemMeta meta, String name) {
+        meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', name));
+    }
+
+    public static void addItemLore(ItemMeta meta, String loreLine) {
+        List<String> lore = meta.hasLore() ? meta.getLore() : new ArrayList<>();
+        lore.add(ChatColor.translateAlternateColorCodes('&', loreLine));
+        meta.setLore(lore);
+    }
+
+    public static void setItemNBT(ItemMeta meta, String key) {
+        NamespacedKey namespacedKey = new NamespacedKey(SMP.getPlugin(), key);
+        meta.getPersistentDataContainer().set(namespacedKey , PersistentDataType.BOOLEAN, true);
     }
 }

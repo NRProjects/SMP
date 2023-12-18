@@ -4,11 +4,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
 import org.bukkit.block.Container;
-<<<<<<< HEAD
-=======
 import org.bukkit.block.Sign;
 import org.bukkit.block.sign.Side;
->>>>>>> 0c5221b46035a241dd1d5e625d4e5e2ba860ebf8
 import org.bukkit.command.*;
 import org.bukkit.entity.Player;
 import org.bukkit.persistence.PersistentDataType;

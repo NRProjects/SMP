@@ -49,11 +49,14 @@ public class Claim {
     public boolean isInside(Location location) {
         double minX = Math.min(points[0].getX(), points[1].getX());
         double maxX = Math.max(points[0].getX(), points[1].getX());
-        double minZ= Math.min(points[0].getZ(), points[1].getZ());
-        double maxZ= Math.max(points[0].getZ(), points[1].getZ());
+        double minY = Math.min(points[0].getY(), points[1].getY());
+        double maxY = Math.max(points[0].getY(), points[1].getY());
+        double minZ = Math.min(points[0].getZ(), points[1].getZ());
+        double maxZ = Math.max(points[0].getZ(), points[1].getZ());
 
         return location.getWorld().equals(world) &&
                 location.getX() >= minX && location.getX() <= maxX &&
+                location.getY() >= minY && location.getY() <= maxY &&
                 location.getZ() >= minZ && location.getZ() <= maxZ;
     }
 }

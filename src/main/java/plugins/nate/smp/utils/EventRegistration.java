@@ -23,7 +23,6 @@ public class EventRegistration {
         pm.registerEvents(new EnchantmentManager(), plugin);
         pm.registerEvents(new TimberListener(), plugin);
         pm.registerEvents(new AntiEntityGriefListener(), plugin);
-        pm.registerEvents(new PlayerJoinListener(), plugin);
         pm.registerEvents(new ElytraFallListener(), plugin);
         pm.registerEvents(new ClaimsListener(), plugin);
     }

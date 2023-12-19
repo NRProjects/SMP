@@ -8,7 +8,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.UUID;
 
 public class Claim {
-    private final Location[] points;
+    private final int maxX, maxY, maxZ;
+    private final int minX, minY, minZ;
     private final World world;
     private final UUID owner;
 
@@ -17,18 +18,23 @@ public class Claim {
             throw new IllegalArgumentException("You must provide exactly two valid locations.");
         }
 
-        this.points = points;
         this.world = points[0].getWorld();
         this.owner = owner;
+
+        this.minX = Math.min(points[0].getBlockX(), points[1].getBlockX());
+        this.maxX = Math.max(points[0].getBlockX(), points[1].getBlockX());
+        this.minY = Math.min(points[0].getBlockY(), points[1].getBlockY());
+        this.maxY = Math.max(points[0].getBlockY(), points[1].getBlockY());
+        this.minZ = Math.min(points[0].getBlockZ(), points[1].getBlockZ());
+        this.maxZ = Math.max(points[0].getBlockZ(), points[1].getBlockZ());
     }
 
-    public Location getPos1() {
-        return points[0];
-    }
-
-    public Location getPos2() {
-        return points[1];
-    }
+    public int getMinX() { return minX; }
+    public int getMaxX() { return maxX; }
+    public int getMinY() { return minY; }
+    public int getMaxY() { return maxY; }
+    public int getMinZ() { return minZ; }
+    public int getMaxZ() { return maxZ; }
 
     public World getWorld() {
         return world;
@@ -38,25 +44,13 @@ public class Claim {
         return owner;
     }
 
-    public Location[] getPoints() {
-        return points;
-    }
-
     public String getOwnerName() {
         return Bukkit.getPlayer(owner).getName();
     }
 
     public boolean isInside(Location location) {
-        double minX = Math.min(points[0].getX(), points[1].getX());
-        double maxX = Math.max(points[0].getX(), points[1].getX());
-        double minY = Math.min(points[0].getY(), points[1].getY());
-        double maxY = Math.max(points[0].getY(), points[1].getY());
-        double minZ = Math.min(points[0].getZ(), points[1].getZ());
-        double maxZ = Math.max(points[0].getZ(), points[1].getZ());
-
-        return location.getWorld().equals(world) &&
-                location.getX() >= minX && location.getX() <= maxX &&
-                location.getY() >= minY && location.getY() <= maxY &&
-                location.getZ() >= minZ && location.getZ() <= maxZ;
+        if (!location.getWorld().equals(this.world)) return false;
+        int x = location.getBlockX(), y = location.getBlockY(), z = location.getBlockZ();
+        return x >= minX && x <= maxX && y >= minY && y <= maxY && z >= minZ && z <= maxZ;
     }
 }

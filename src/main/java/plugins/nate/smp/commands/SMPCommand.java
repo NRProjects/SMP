@@ -183,6 +183,13 @@ public class SMPCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
 
+            if (args.length == 1) {
+                ClaimsManager.giveClaimTool(player);
+                sendMessage(player, PREFIX + "&aGranted claim tool in inventory");
+                return true;
+            }
+
+
             if (args.length == 2 && args[1].equalsIgnoreCase("confirm")) {
                 if (ClaimsManager.hasNullSelectionPoint(player)) {
                     sendMessage(player, PREFIX + "&cYou must select two points to make a claim!");
@@ -199,17 +206,21 @@ public class SMPCommand implements CommandExecutor, TabCompleter {
                 Claim claim = ClaimsManager.getClaimAtLocation(player.getLocation());
 
                 if (claim == null) {
-                    sendMessage(player, PREFIX + "Claim is null");
+                    sendMessage(player, PREFIX + "&cYou are not in a claim!");
                     return true;
                 }
 
                 ClaimsManager.displayClaimBorder(claim, player);
+                sendMessage(player, "&8&m------------------------&8&l[&a&lSMP&8&l]&8&m------------------------");
+                sendMessage(player, "&7Owner: " + claim.getOwnerName());
+                // TODO: Add a hover effect for the positions
+                sendMessage(player, "&7Coordinates: Pos1, Pos2");
+                // TODO: Add a click effect for "Click to show border"
+                sendMessage(player, "&7Border: [Click to show border]");
+
 
                 return true;
             }
-
-            ClaimsManager.giveClaimTool(player);
-            sendMessage(player, PREFIX + "&aGranted claim tool in inventory");
         } else {
             sendMessage(sender, PREFIX + "&cUnknown command");
         }

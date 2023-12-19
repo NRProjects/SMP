@@ -30,13 +30,12 @@ public class ClaimsManager {
 
     public static void loadClaims() {
         ResultSet rs = SMPDatabase.queryDB("SELECT * FROM claims");
-
         try {
             while (rs.next()) {
                 UUID owner = UUID.fromString(rs.getString("OwnerUUID"));
                 World world = Bukkit.getWorld(rs.getString("World"));
-                Location pos1 = new Location(world, rs.getInt("Pos1_X"), rs.getInt("Pos1_Y"), rs.getInt("Pos1_Z"));
-                Location pos2 = new Location(world, rs.getInt("Pos2_X"), rs.getInt("Pos2_Y"), rs.getInt("Pos2_Z"));
+                Location pos1 = new Location(world, rs.getInt("MaxX"), rs.getInt("MaxY"), rs.getInt("MaxZ"));
+                Location pos2 = new Location(world, rs.getInt("MinX"), rs.getInt("MinY"), rs.getInt("MinZ"));
                 Location[] points = {pos1, pos2};
 
                 claims.add(new Claim(points, owner));
@@ -49,6 +48,10 @@ public class ClaimsManager {
     public static void giveClaimTool(Player player) {
         ItemStack claimTool = new ItemStack(Material.GOLDEN_SHOVEL);
         ItemMeta claimToolMeta = claimTool.getItemMeta();
+
+        if (claimToolMeta == null) {
+            return;
+        }
 
         SMPUtils.changeItemName(claimToolMeta, "&aClaim Tool");
         addItemLore(claimToolMeta, "");
@@ -85,7 +88,7 @@ public class ClaimsManager {
         }
 
         points[posNumber - 1] = location;
-        SMPUtils.log(Arrays.toString(playerSelections.get(player)));
+
         sendMessage(player, PREFIX + "&aSelected point " + posNumber + "! " +
                 "&a(X: " + (int) location.getX() + " Y: " + (int) location.getY() + " Z: " + (int) location.getZ() + ")");
     }
@@ -104,15 +107,20 @@ public class ClaimsManager {
     }
 
     public static void createClaim(Claim claim) {
-        SMPDatabase.queryDB("INSERT INTO claims (OwnerUUID, World, Pos1_X, Pos1_Y, Pos1_Z, Pos2_X, Pos2_Y, Pos2_Z) VALUES (?, ?, ?, ?, ?, ?, ?, ?);",
+        if (doesClaimOverlap(claim)) {
+            sendMessage(Bukkit.getPlayer(claim.getOwner()), PREFIX + "&cFailed to create a claim. Part of your selection is already claimed!");
+            return;
+        }
+
+        SMPDatabase.queryDB("INSERT INTO claims (OwnerUUID, World, MaxX, MaxY, MaxZ, MinX, MinY, MinZ) VALUES (?, ?, ?, ?, ?, ?, ?, ?);",
                 // Owner
                 claim.getOwner().toString(),
                 // Word
                 claim.getWorld().getName(),
-                // First position
-                (int) claim.getPos1().getX(), (int) claim.getPos1().getY(), (int) claim.getPos1().getZ(),
-                // Second position
-                (int) claim.getPos2().getX(), (int) claim.getPos2().getY(), (int) claim.getPos2().getZ());
+                // Maximum X, Y, Z
+                claim.getMaxX(), claim.getMaxY(), claim.getMaxZ(),
+                // Minimum X, Y, Z
+                claim.getMinX(), claim.getMinY(), claim.getMinZ());
 
         claims.add(claim);
 
@@ -139,15 +147,16 @@ public class ClaimsManager {
         } else {
             int taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(SMP.getPlugin(), () -> {
                 World world = claim.getWorld();
-                Location pos1 = claim.getPos1();
-                Location pos2 = claim.getPos2();
+                Location pos1 = new Location(claim.getWorld(), claim.getMaxX(), claim.getMaxY(), claim.getMaxZ());
+                Location pos2 = new Location(claim.getWorld(), claim.getMinX(), claim.getMinY(), claim.getMinZ());
 
+                // We add plus one to account for particle being offset when spawned
                 int minX = Math.min(pos1.getBlockX(), pos2.getBlockX());
-                int maxX = Math.max(pos1.getBlockX(), pos2.getBlockX());
+                int maxX = Math.max(pos1.getBlockX(), pos2.getBlockX()) + 1;
                 int minY = Math.min(pos1.getBlockY(), pos2.getBlockY());
-                int maxY = Math.max(pos1.getBlockY(), pos2.getBlockY());
+                int maxY = Math.max(pos1.getBlockY(), pos2.getBlockY()) + 1;
                 int minZ = Math.min(pos1.getBlockZ(), pos2.getBlockZ());
-                int maxZ = Math.max(pos1.getBlockZ(), pos2.getBlockZ());
+                int maxZ = Math.max(pos1.getBlockZ(), pos2.getBlockZ()) + 1;
 
                 double step = 0.5;
 
@@ -173,8 +182,6 @@ public class ClaimsManager {
 
             borderDisplayTasks.put(playerUUID, taskId);
         }
-
-
     }
 
     private static void spawnParticle(World world, double x, double y, double z, Player player) {
@@ -182,5 +189,26 @@ public class ClaimsManager {
         Particle.DustOptions dustOptions = new Particle.DustOptions(Color.fromRGB(66, 135, 245), 1.0F);
 
         player.spawnParticle(Particle.REDSTONE, location, 1, 0, 0, 0, 10, dustOptions);
+    }
+
+    public static boolean doesClaimOverlap(Claim claim) {
+        ResultSet rs = SMPDatabase.queryDB(
+                "SELECT * FROM claims WHERE World = ? AND NOT (MaxX < ? OR MinX > ? OR MaxY < ? OR MinY > ? OR MaxZ < ? OR MinZ > ?)",
+                claim.getWorld().getName(),
+                claim.getMinX(), claim.getMaxX(),
+                claim.getMinY(), claim.getMaxY(),
+                claim.getMinZ(), claim.getMaxZ()
+        );
+
+        try {
+            // If there are any entries in the result set there is an overlap
+            if (rs.next()) {
+                return true;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return false;
     }
 }

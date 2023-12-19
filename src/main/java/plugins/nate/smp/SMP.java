@@ -68,7 +68,6 @@ public final class SMP extends JavaPlugin {
     // TODO: Make max claim in one direction 256 blocks
     // TODO: Make minimum claim a 5x5x5 cube
     // TODO: Read this below
-    // TODO: Change SQL to store min & max coordinate values instead of individual postition coordinates
     /* For claim border toggling I should make it a button you can click in chat from the info message created from /smp claim info, this button will toggle the border on and off
      *
      * */

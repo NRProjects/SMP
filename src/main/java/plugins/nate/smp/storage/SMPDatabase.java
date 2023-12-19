@@ -24,12 +24,12 @@ public class SMPDatabase {
                         "ID INTEGER PRIMARY KEY AUTOINCREMENT," +
                         "OwnerUUID TEXT," +
                         "World TEXT," +
-                        "Pos1_X INTEGER," +
-                        "Pos1_Y INTEGER," +
-                        "Pos1_Z INTEGER," +
-                        "Pos2_Y INTEGER," +
-                        "Pos2_X INTEGER," +
-                        "Pos2_Z INTEGER," +
+                        "MaxX INTEGER," +
+                        "MaxY INTEGER," +
+                        "MaxZ INTEGER," +
+                        "MinX INTEGER," +
+                        "MinY INTEGER," +
+                        "MinZ INTEGER," +
                         "Members TEXT);";
 
                 statement.execute(sql);

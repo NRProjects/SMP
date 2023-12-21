@@ -68,7 +68,7 @@ public class ClaimsListener implements Listener {
         Claim lastClaim = lastClaimMap.get(player.getUniqueId());
 
         if (currentClaim != null && !currentClaim.equals(lastClaim)) {
-            sendMessage(player, PREFIX + "You have entered a claim owned by " + currentClaim.getOwnerName());
+            sendMessage(player, PREFIX + "&7You have entered a claim owned by &a" + currentClaim.getOwnerName());
             lastClaimMap.put(playerUUID, currentClaim);
         } else if (currentClaim == null && lastClaim != null) {
             lastClaimMap.remove(playerUUID);

@@ -63,7 +63,7 @@ public class SMPCommand implements CommandExecutor, TabCompleter {
                 sendMessage(sender, PREFIX + "&cUsage: /smp forcelock <username>");
                 return true;
             }
-            if (Bukkit.getOfflinePlayer(args[1]).hasPlayedBefore() == false) {
+            if (!Bukkit.getOfflinePlayer(args[1]).hasPlayedBefore()) {
                 sendMessage(sender, PREFIX + "&c" + args[1] + " is not a valid player!");
                 return true;
             }
@@ -212,11 +212,13 @@ public class SMPCommand implements CommandExecutor, TabCompleter {
 
                 ClaimsManager.displayClaimBorder(claim, player);
                 sendMessage(player, "&8&m------------------------&8&l[&a&lSMP&8&l]&8&m------------------------");
-                sendMessage(player, "&7Owner: " + claim.getOwnerName());
+                sendMessage(player, "&7Owner: &a" + claim.getOwnerName());
                 // TODO: Add a hover effect for the positions
-                sendMessage(player, "&7Coordinates: Pos1, Pos2");
+                sendMessage(player, "&7Coordinates: " + "&a(X: " + claim.getMaxX() + " Y: " + claim.getMaxY() + " Z: " + claim.getMaxZ() + ") &7| " +
+                        "&a(X: " + claim.getMinX() + " Y: " + claim.getMinY() + " Z: " + claim.getMinZ() + ")");
                 // TODO: Add a click effect for "Click to show border"
-                sendMessage(player, "&7Border: [Click to show border]");
+                sendMessage(player, "&7Border: &a[Click to show border]");
+                sendMessage(player, "&7Members: &a");
 
 
                 return true;

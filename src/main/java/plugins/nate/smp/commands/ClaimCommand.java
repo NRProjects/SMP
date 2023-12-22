@@ -30,71 +30,16 @@ public class ClaimCommand implements CommandExecutor, TabCompleter {
         }
 
         if (args.length == 0) {
-            ClaimsManager.giveClaimTool(player);
-            sendMessage(player, PREFIX + "&aGranted claim tool in inventory");
-
-            return true;
+            return handleDefaultCommand(player);
         }
 
-        if (args.length == 1 && args[0].equalsIgnoreCase("help")) {
-            sendMessage(player, "Implement help menu");
-
-            return true;
-        }
-        // /claim <showborder>
-        else if (args.length == 1 && args[0].equalsIgnoreCase("showborder")) {
-            Claim claim = ClaimsManager.getClaimAtLocation(player.getLocation());
-
-            if (claim == null) {
-                sendMessage(player, PREFIX + "&cYou must be standing in a claim to display its borders!");
-
-                return true;
-            }
-
-            ClaimsManager.toggleClaimBorder(claim, player);
-
-            return true;
-        } else if (args[0].equalsIgnoreCase("create")) {
-            if (ClaimsManager.hasNullSelectionPoint(player)) {
-                sendMessage(player, PREFIX + "&cYou must select two points to make a claim!");
-
-                return true;
-            }
-
-            if (args.length > 3 || args[1].equals("")) {
-                sendMessage(player, PREFIX + "&&cUsage: /claim confirm <claim name>");
-
-                return true;
-            }
-
-            String claimName = args[1];
-            Claim claim = new Claim(ClaimsManager.getPoints(player), player.getUniqueId(), claimName);
-            ClaimsManager.createClaim(claim);
-
-            return true;
-        } else if (args.length == 1 && args[0].equalsIgnoreCase("info")) {
-            Claim claim = ClaimsManager.getClaimAtLocation(player.getLocation());
-
-            if (claim == null) {
-                sendMessage(player, PREFIX + "&cYou are not in a claim!");
-
-                return true;
-            }
-
-            ClaimsManager.displayClaimBorder(claim, player);
-            sendMessage(player, "&8&m------------------------&8&l[&a&lSMP&8&l]&8&m------------------------");
-            sendMessage(player, "&7Owner: &a" + claim.getOwnerName());
-            // TODO: Add claim settings GUI
-            sendMessage(player, "&7Settings: &a[Click to change settings]");
-            sendMessage(player, createPosTooltip(claim));
-            sendMessage(player, toggleClaimBorder());
-            sendMessage(player, "&7Members: &a");
-
-
-
-            return true;
-        }
-        return false;
+        return switch (args[0].toLowerCase()) {
+            case "help" -> handleHelpCommand(player, args);
+            case "showborder" -> handleShowBorderCommand(player, args);
+            case "create" -> handleCreateCommand(player, args);
+            case "info" -> handleInfoCommand(player, args);
+            default -> handleIncorrectCommandUsage(player);
+        };
     }
 
     @Nullable
@@ -130,5 +75,99 @@ public class ClaimCommand implements CommandExecutor, TabCompleter {
                 .event(clickEvent);
 
         return chatMessage.create();
+    }
+
+    /*
+    * Sub command methods below
+    * */
+
+    private static boolean handleIncorrectCommandUsage(Player player) {
+        sendMessage(player, PREFIX + "&cUnknown command. Type /claim help for help.");
+        return true;
+    }
+
+    private static boolean handleDefaultCommand(Player player) {
+        ClaimsManager.giveClaimTool(player);
+        sendMessage(player, PREFIX + "&aGranted claim tool in inventory");
+        return true;
+    }
+
+    private static boolean handleHelpCommand(Player player, String[] args) {
+        if (args.length > 1) {
+            handleIncorrectCommandUsage(player);
+            return true;
+        }
+
+        sendMessage(player, "Implement help menu");
+        return true;
+    }
+
+    private static boolean handleShowBorderCommand(Player player, String[] args) {
+        if (args.length > 1) {
+            handleIncorrectCommandUsage(player);
+            return true;
+        }
+
+        Claim claim = ClaimsManager.getClaimAtLocation(player.getLocation());
+
+        if (claim == null) {
+            sendMessage(player, PREFIX + "&cYou must be standing in a claim to display its borders!");
+
+            return true;
+        }
+
+        ClaimsManager.toggleClaimBorder(claim, player);
+        return true;
+    }
+
+    private static boolean handleCreateCommand(Player player, String[] args) {
+        if (args.length > 1) {
+            handleIncorrectCommandUsage(player);
+            return true;
+        }
+
+        if (ClaimsManager.hasNullSelectionPoint(player)) {
+            sendMessage(player, PREFIX + "&cYou must select two points to make a claim!");
+
+            return true;
+        }
+
+        if (args.length > 3 || args[1].equals("")) {
+            sendMessage(player, PREFIX + "&&cUsage: /claim confirm <claim name>");
+
+            return true;
+        }
+
+        String claimName = args[1];
+        Claim claim = new Claim(ClaimsManager.getPoints(player), player.getUniqueId(), claimName);
+        ClaimsManager.createClaim(claim);
+
+        return true;
+    }
+
+    private static boolean handleInfoCommand(Player player, String[] args) {
+        if (args.length > 1) {
+            handleIncorrectCommandUsage(player);
+            return true;
+        }
+
+        Claim claim = ClaimsManager.getClaimAtLocation(player.getLocation());
+
+        if (claim == null) {
+            sendMessage(player, PREFIX + "&cYou are not in a claim!");
+
+            return true;
+        }
+
+        ClaimsManager.displayClaimBorder(claim, player);
+        sendMessage(player, "&8&m------------------------&8&l[&a&lSMP&8&l]&8&m------------------------");
+        sendMessage(player, "&7Owner: &a" + claim.getOwnerName());
+        // TODO: Add claim settings GUI
+        sendMessage(player, "&7Settings: &a[Click to change settings]");
+        sendMessage(player, createPosTooltip(claim));
+        sendMessage(player, toggleClaimBorder());
+        sendMessage(player, "&7Members: &a");
+
+        return true;
     }
 }

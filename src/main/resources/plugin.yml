@@ -13,9 +13,9 @@ commands:
     usage: /<command>
   pl:
     usage: /<command>
-#  claim:
-#    description: Get the claiming tool
-#    usage: /<command>
+  claim:
+    description: Get the claiming tool
+    usage: /<command>
   smp:
     usage: /<command>
   dev:

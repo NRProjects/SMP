@@ -12,9 +12,7 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
-import plugins.nate.smp.managers.ClaimsManager;
 import plugins.nate.smp.managers.TrustManager;
-import plugins.nate.smp.objects.Claim;
 import plugins.nate.smp.utils.ChatUtils;
 import plugins.nate.smp.utils.SMPUtils;
 
@@ -177,50 +175,6 @@ public class SMPCommand implements CommandExecutor, TabCompleter {
                     .collect(Collectors.joining(", "));
 
             sendMessage(player, PREFIX + "&aTrusted Players: " + trustedPlayerNames);
-        } else if (args[0].equalsIgnoreCase("claim")) {
-            if (!(sender instanceof Player player)) {
-                sendMessage(sender, "&cOnly players can use this command!");
-                return true;
-            }
-
-            if (args.length == 1) {
-                ClaimsManager.giveClaimTool(player);
-                sendMessage(player, PREFIX + "&aGranted claim tool in inventory");
-                return true;
-            }
-
-
-            if (args.length == 2 && args[1].equalsIgnoreCase("confirm")) {
-                if (ClaimsManager.hasNullSelectionPoint(player)) {
-                    sendMessage(player, PREFIX + "&cYou must select two points to make a claim!");
-                    return true;
-                }
-
-                Claim claim = new Claim(ClaimsManager.getPoints(player), player.getUniqueId());
-                sendMessage(player, claim.toString());
-
-                ClaimsManager.createClaim(claim);
-
-                return true;
-            } else if (args.length == 2 && args[1].equalsIgnoreCase("info")) {
-                Claim claim = ClaimsManager.getClaimAtLocation(player.getLocation());
-
-                if (claim == null) {
-                    sendMessage(player, PREFIX + "&cYou are not in a claim!");
-                    return true;
-                }
-
-                ClaimsManager.displayClaimBorder(claim, player);
-                sendMessage(player, "&8&m------------------------&8&l[&a&lSMP&8&l]&8&m------------------------");
-                sendMessage(player, "&7Owner: " + claim.getOwnerName());
-                // TODO: Add a hover effect for the positions
-                sendMessage(player, "&7Coordinates: Pos1, Pos2");
-                // TODO: Add a click effect for "Click to show border"
-                sendMessage(player, "&7Border: [Click to show border]");
-
-
-                return true;
-            }
         } else {
             sendMessage(sender, PREFIX + "&cUnknown command");
         }

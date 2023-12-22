@@ -2,6 +2,7 @@ package plugins.nate.smp.objects;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.jetbrains.annotations.NotNull;
 
@@ -12,14 +13,16 @@ public class Claim {
     private final int minX, minY, minZ;
     private final World world;
     private final UUID owner;
+    private final String claimName;
 
-    public Claim(@NotNull Location[] points, UUID owner) {
+    public Claim(@NotNull Location[] points, UUID owner, String claimName) {
         if (points == null || points.length != 2) {
             throw new IllegalArgumentException("You must provide exactly two valid locations.");
         }
 
         this.world = points[0].getWorld();
         this.owner = owner;
+        this.claimName = claimName;
 
         this.minX = Math.min(points[0].getBlockX(), points[1].getBlockX());
         this.maxX = Math.max(points[0].getBlockX(), points[1].getBlockX());
@@ -36,12 +39,20 @@ public class Claim {
     public int getMinZ() { return minZ; }
     public int getMaxZ() { return maxZ; }
 
+    public String getClaimName() {
+        return claimName;
+    }
+
     public World getWorld() {
         return world;
     }
 
     public UUID getOwner() {
         return owner;
+    }
+
+    public OfflinePlayer getOwnerPlayer() {
+        return Bukkit.getOfflinePlayer(owner);
     }
 
     public String getOwnerName() {

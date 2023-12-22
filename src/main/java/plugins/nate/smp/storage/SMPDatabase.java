@@ -22,6 +22,7 @@ public class SMPDatabase {
             try (Statement statement = connection.createStatement()) {
                 String sql = "CREATE TABLE IF NOT EXISTS claims (" +
                         "ID INTEGER PRIMARY KEY AUTOINCREMENT," +
+                        "ClaimName TEXT," +
                         "OwnerUUID TEXT," +
                         "World TEXT," +
                         "MaxX INTEGER," +

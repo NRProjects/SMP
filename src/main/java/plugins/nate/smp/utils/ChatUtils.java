@@ -1,6 +1,7 @@
 package plugins.nate.smp.utils;
 
 import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.chat.BaseComponent;
 import org.bukkit.command.CommandSender;
 
 public class ChatUtils {
@@ -12,5 +13,9 @@ public class ChatUtils {
 
     public static void sendMessage(CommandSender sender, String message) {
         sender.sendMessage(ChatColor.translateAlternateColorCodes('&', message));
+    }
+
+    public static void sendMessage(CommandSender sender, BaseComponent... components) {
+        sender.spigot().sendMessage(components);
     }
 }

@@ -32,13 +32,14 @@ public class ClaimsManager {
         ResultSet rs = SMPDatabase.queryDB("SELECT * FROM claims");
         try {
             while (rs.next()) {
+                String claimName = rs.getString("ClaimName");
                 UUID owner = UUID.fromString(rs.getString("OwnerUUID"));
                 World world = Bukkit.getWorld(rs.getString("World"));
                 Location pos1 = new Location(world, rs.getInt("MaxX"), rs.getInt("MaxY"), rs.getInt("MaxZ"));
                 Location pos2 = new Location(world, rs.getInt("MinX"), rs.getInt("MinY"), rs.getInt("MinZ"));
                 Location[] points = {pos1, pos2};
 
-                claims.add(new Claim(points, owner));
+                claims.add(new Claim(points, owner, claimName));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -112,7 +113,9 @@ public class ClaimsManager {
             return;
         }
 
-        SMPDatabase.queryDB("INSERT INTO claims (OwnerUUID, World, MaxX, MaxY, MaxZ, MinX, MinY, MinZ) VALUES (?, ?, ?, ?, ?, ?, ?, ?);",
+        SMPDatabase.queryDB("INSERT INTO claims (ClaimName, OwnerUUID, World, MaxX, MaxY, MaxZ, MinX, MinY, MinZ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);",
+                // Claim name
+                claim.getClaimName(),
                 // Owner
                 claim.getOwner().toString(),
                 // Word
@@ -210,5 +213,19 @@ public class ClaimsManager {
         }
 
         return false;
+    }
+
+    public static void toggleClaimBorder(Claim claim, Player player) {
+        UUID playerUUID = player.getUniqueId();
+
+        if (borderDisplayTasks.containsKey(playerUUID)) {
+            int taskId = borderDisplayTasks.get(playerUUID);
+            Bukkit.getScheduler().cancelTask(taskId);
+            borderDisplayTasks.remove(playerUUID);
+            sendMessage(player, PREFIX + "&cClaim border display turned off");
+        } else {
+            displayClaimBorder(claim, player);
+            sendMessage(player, PREFIX + "&aClaim border display turned on");
+        }
     }
 }

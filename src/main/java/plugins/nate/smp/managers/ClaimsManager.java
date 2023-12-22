@@ -141,14 +141,32 @@ public class ClaimsManager {
     }
 
     public static void displayClaimBorder(Claim claim, Player player) {
+        final int[] taskIdHolder = new int[1];
+
         UUID playerUUID = player.getUniqueId();
+        double maxDistance = 64.0;
 
         if (borderDisplayTasks.containsKey(playerUUID)) {
             int taskId = borderDisplayTasks.get(playerUUID);
             Bukkit.getScheduler().cancelTask(taskId);
             borderDisplayTasks.remove(playerUUID);
         } else {
-            int taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(SMP.getPlugin(), () -> {
+            taskIdHolder[0] = Bukkit.getScheduler().scheduleSyncRepeatingTask(SMP.getPlugin(), () -> {
+                if (!player.isOnline()) {
+                    Bukkit.getScheduler().cancelTask(taskIdHolder[0]);
+                    borderDisplayTasks.remove(playerUUID);
+                    return;
+                }
+
+                Location playerLocation = player.getLocation();
+                Location nearestEdge = findNearestClaimEdge(playerLocation, claim);
+
+                if (playerLocation.distance(nearestEdge ) > maxDistance) {
+                    Bukkit.getScheduler().cancelTask(taskIdHolder[0]);
+                    borderDisplayTasks.remove(playerUUID);
+                    return;
+                }
+
                 World world = claim.getWorld();
                 Location pos1 = new Location(claim.getWorld(), claim.getMaxX(), claim.getMaxY(), claim.getMaxZ());
                 Location pos2 = new Location(claim.getWorld(), claim.getMinX(), claim.getMinY(), claim.getMinZ());
@@ -183,7 +201,7 @@ public class ClaimsManager {
                 }
             }, 0L, 10L);
 
-            borderDisplayTasks.put(playerUUID, taskId);
+            borderDisplayTasks.put(playerUUID, taskIdHolder[0]);
         }
     }
 
@@ -227,5 +245,14 @@ public class ClaimsManager {
             displayClaimBorder(claim, player);
             sendMessage(player, PREFIX + "&aClaim border display turned on");
         }
+    }
+
+    private static Location findNearestClaimEdge(Location playerLocation, Claim claim) {
+        World world = claim.getWorld();
+        double nearestX = Math.max(claim.getMinX(), Math.min(claim.getMaxX(), playerLocation.getX()));
+        double nearestY = Math.max(claim.getMinY(), Math.min(claim.getMaxY(), playerLocation.getY()));
+        double nearestZ = Math.max(claim.getMinZ(), Math.min(claim.getMaxZ(), playerLocation.getZ()));
+
+        return new Location(world, nearestX, nearestY, nearestZ);
     }
 }

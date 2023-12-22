@@ -125,7 +125,7 @@ public class ClaimCommand implements CommandExecutor, TabCompleter {
         ClickEvent clickEvent = new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/claim showborder");
 
         ComponentBuilder chatMessage = new ComponentBuilder()
-                .append(ChatColor.GRAY + "Border: " + ChatColor.GREEN + "[Click to show claim border]")
+                .append(ChatColor.GRAY + "Border: " + ChatColor.GREEN + "[Click to toggle claim border]")
                 .event(hoverEvent)
                 .event(clickEvent);
 

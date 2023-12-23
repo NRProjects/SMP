@@ -3,10 +3,15 @@ package plugins.nate.smp.listeners;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Chicken;
+import org.bukkit.entity.Egg;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.entity.EntitySpawnEvent;
+import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import plugins.nate.smp.managers.ClaimsManager;
@@ -21,6 +26,7 @@ import static plugins.nate.smp.utils.ChatUtils.sendMessage;
 
 public class ClaimsListener implements Listener {
     private static final Map<UUID, Claim> lastClaimMap = new HashMap<>();
+    private static final Map<UUID, Player> eggThrowers = new HashMap<>();
 
     @EventHandler
     public void onClaimToolUse(PlayerInteractEvent event) {
@@ -90,10 +96,55 @@ public class ClaimsListener implements Listener {
             return;
         }
 
-        if (claim.getOwner() == event.getPlayer().getUniqueId()) {
+        if (claim.getOwner().equals(event.getPlayer().getUniqueId())) {
             return;
         }
 
+        sendMessage(event.getPlayer(), PREFIX + "&cYou do not have permission to modify in this claim!");
+        event.setCancelled(true);
+    }
 
+    /*
+    * These methods are to stop chickens from spawning in claims that are not thrown by the claim owner
+    * */
+
+    @EventHandler
+    public void onEggLaunch(ProjectileLaunchEvent event) {
+        if (!(event.getEntity() instanceof Egg egg)) {
+            return;
+        }
+
+        if (!(egg.getShooter() instanceof Player shooter)) {
+            return;
+        }
+        eggThrowers.put(egg.getUniqueId(), shooter);
+    }
+
+    @EventHandler
+    public void onChickSpawn(EntitySpawnEvent event) {
+        if (!(event.getEntity() instanceof Chicken)) {
+            return;
+        }
+
+        Location spawnLocation = event.getLocation();
+
+        for (Entity entity : spawnLocation.getWorld().getNearbyEntities(spawnLocation, 5, 5, 5)) {
+            if (!(entity instanceof Egg egg)) {
+                continue;
+            }
+
+            Player player = eggThrowers.remove(egg.getUniqueId());
+            if (player == null) {
+                event.setCancelled(true);
+                continue;
+            }
+
+            Claim claim = ClaimsManager.getClaimAtLocation(spawnLocation);
+            if (claim != null && !claim.getOwner().equals(player.getUniqueId())) {
+                event.setCancelled(true);
+                return;
+            }
+
+        }
     }
 }

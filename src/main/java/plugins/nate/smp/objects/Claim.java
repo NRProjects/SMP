@@ -15,9 +15,9 @@ public class Claim {
     private final UUID owner;
     private final String claimName;
 
-    public Claim(@NotNull Location[] points, UUID owner, String claimName) {
+    public Claim(@NotNull Location[] points, @NotNull UUID owner, @NotNull String claimName) {
         if (points == null || points.length != 2) {
-            throw new IllegalArgumentException("You must provide exactly two valid locations.");
+            throw new IllegalArgumentException("You must provide exactly two valid locations when creating a claim!");
         }
 
         this.world = points[0].getWorld();

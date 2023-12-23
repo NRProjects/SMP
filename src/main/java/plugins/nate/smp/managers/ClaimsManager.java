@@ -227,6 +227,7 @@ public class ClaimsManager {
                 return true;
             }
         } catch (SQLException e) {
+            SMPUtils.severe("Issue with the try-catch within doesClaimOverlap() method");
             e.printStackTrace();
         }
 
@@ -255,4 +256,68 @@ public class ClaimsManager {
 
         return new Location(world, nearestX, nearestY, nearestZ);
     }
+
+    public static boolean hasClaim(Player player) {
+        ResultSet rs = SMPDatabase.queryDB("SELECT * FROM claims WHERE OwnerUUID = ?;", player.getUniqueId().toString());
+
+        try {
+            return rs.next();
+        } catch (SQLException e) {
+            SMPUtils.severe("Issue with the try-catch within hasClaim() method");
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    public static boolean isOwnerOfClaim(Player player, Claim claim) {
+        UUID ownerUUID = player.getUniqueId();
+        ResultSet rs = SMPDatabase.queryDB("SELECT * FROM claims WHERE ClaimName = ? AND OwnerUUID = ?;", claim.getClaimName(), ownerUUID.toString());
+
+        try {
+            return rs.next();
+        } catch (SQLException e) {
+            SMPUtils.severe("Issue with the try-catch within isOwnerOfClaim() method");
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    public static Claim getClaimFromName(String name) {
+        ResultSet rs = SMPDatabase.queryDB("SELECT * FROM claims WHERE ClaimName = ?;", name);
+
+        try{
+            if (rs.next()) {
+                String claimName = rs.getString("ClaimName");
+                UUID ownerUUID = UUID.fromString(rs.getString("OwnerUUID"));
+                World world = Bukkit.getServer().getWorld(rs.getString("World"));
+                Location[] points = new Location[]{
+                        new Location(world, rs.getInt("MaxX"), rs.getInt("MaxY"), rs.getInt("MaxZ")),
+                        new Location(world, rs.getInt("MinX"), rs.getInt("MinY"), rs.getInt("MinZ"))
+                };
+
+                return new Claim(points, ownerUUID, claimName);
+            }
+        } catch (SQLException e) {
+            SMPUtils.severe("Issue with the try-catch within getClaimFromName() method");
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    public static boolean claimNameAlreadyExists(String claimName) {
+        ResultSet rs = SMPDatabase.queryDB("SELECT * FROM claims WHERE ClaimName = ?", claimName);
+
+        try {
+             return rs.next();
+        } catch (SQLException e) {
+            SMPUtils.severe("Issue with the try-catch within claimNameAlreadyExists() method");
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
 }

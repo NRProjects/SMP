@@ -56,6 +56,9 @@ public class SMPUtils {
     public static void log(String log) {
         SMP.getPlugin().getLogger().info(log);
     }
+    public static void severe(String log) {
+        SMP.getPlugin().getLogger().severe(log);
+    }
 
     public static boolean isFlagAllowedAtLocation(StateFlag flag, Location location) {
         World world = location.getWorld();

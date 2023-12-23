@@ -6,6 +6,8 @@ import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.hover.content.Text;
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -38,6 +40,7 @@ public class ClaimCommand implements CommandExecutor, TabCompleter {
             case "showborder" -> handleShowBorderCommand(player, args);
             case "create" -> handleCreateCommand(player, args);
             case "info" -> handleInfoCommand(player, args);
+            case "invite" -> handleInviteCommand(player, args);
             default -> handleIncorrectCommandUsage(player);
         };
     }
@@ -98,7 +101,12 @@ public class ClaimCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        sendMessage(player, "Implement help menu");
+        sendMessage(player, PREFIX + "/claim help - Displays claim help menu");
+        sendMessage(player, PREFIX + "/claim create <claim name> - Creates a claim");
+        sendMessage(player, PREFIX+ "/claim invite <username> <claim name> - Invites a player to a specific claim");
+        sendMessage(player, PREFIX + "/claim info - Shows info on claim you're standing in");
+        sendMessage(player, PREFIX + "/claim showborder - Shows the border of the claim you're standing in");
+
         return true;
     }
 
@@ -121,8 +129,9 @@ public class ClaimCommand implements CommandExecutor, TabCompleter {
     }
 
     private static boolean handleCreateCommand(Player player, String[] args) {
-        if (args.length > 1) {
-            handleIncorrectCommandUsage(player);
+        if (args.length != 2) {
+            sendMessage(player, PREFIX + "&&cUsage: /claim create <claim name>");
+
             return true;
         }
 
@@ -132,13 +141,13 @@ public class ClaimCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        if (args.length > 3 || args[1].equals("")) {
-            sendMessage(player, PREFIX + "&&cUsage: /claim confirm <claim name>");
+        String claimName = args[1];
 
+        if (ClaimsManager.claimNameAlreadyExists(claimName)) {
+            sendMessage(player, PREFIX + "&cClaim name is already taken!");
             return true;
         }
 
-        String claimName = args[1];
         Claim claim = new Claim(ClaimsManager.getPoints(player), player.getUniqueId(), claimName);
         ClaimsManager.createClaim(claim);
 
@@ -168,6 +177,39 @@ public class ClaimCommand implements CommandExecutor, TabCompleter {
         sendMessage(player, toggleClaimBorder());
         sendMessage(player, "&7Members: &a");
 
+        return true;
+    }
+
+    private static boolean handleInviteCommand(Player player, String[] args) {
+        if (args.length != 3) {
+            sendMessage(player, PREFIX + "&cUsage: /claim invite <username>");
+            return true;
+        }
+
+        if (!ClaimsManager.hasClaim(player)) {
+            sendMessage(player, PREFIX + "&cYou currently do not have any claims! Create one with /claim create");
+            return true;
+        }
+
+        Claim claim = ClaimsManager.getClaimFromName(args[2]);
+        if (claim == null) {
+            sendMessage(player, PREFIX + "&cClaim \"" + args[2] + "\" does not exist!");
+            return true;
+        }
+
+        if (!ClaimsManager.isOwnerOfClaim(player, claim)) {
+            sendMessage(player, PREFIX + "&cYou are not the owner \"" + args[2] + "\"! You cannot invite people to claims you don't own!");
+            return true;
+        }
+
+        OfflinePlayer invitedPlayer = Bukkit.getOfflinePlayer(args[1]);
+
+        if (!invitedPlayer.hasPlayedBefore()) {
+            sendMessage(player, PREFIX + "&cPlayer \"" + args[1] + "\" must be online when inviting them" );
+            return true;
+        }
+
+        sendMessage(player, PREFIX + "Implement successful invite");
         return true;
     }
 }

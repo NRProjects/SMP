@@ -53,6 +53,13 @@ public final class SMP extends JavaPlugin {
         } catch (FlagConflictException ignored) {}
     }
 
+    @Override
+    public void onDisable() {
+        if (database != null) {
+            database.close();
+        }
+    }
+
     public static SMP getPlugin() {
         return plugin;
     }

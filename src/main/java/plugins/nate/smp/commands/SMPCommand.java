@@ -12,6 +12,7 @@ import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
 
 import plugins.nate.smp.listeners.ChestLockListener;
+import plugins.nate.smp.managers.LockManager;
 import plugins.nate.smp.managers.TrustManager;
 import plugins.nate.smp.utils.ChatUtils;
 import plugins.nate.smp.utils.SMPUtils;
@@ -188,8 +189,7 @@ public class SMPCommand implements CommandExecutor, TabCompleter {
             }
             Container container = (Container) targetBlock;
 
-            // ChestLockListener chestLockListener = new ChestLockListener();
-            ChestLockListener.lockContainer(player.getUniqueId(), container);
+            LockManager.lockContainer(player.getUniqueId(), container);
 
         } else if (args[0].equalsIgnoreCase("unlock")) {
             if (!(sender instanceof Player)) {
@@ -213,7 +213,7 @@ public class SMPCommand implements CommandExecutor, TabCompleter {
             }
 
             // ChestLockListener chestLockListener = new ChestLockListener();
-            UUID poppedUUID = ChestLockListener.unlockContainer(container);
+            UUID poppedUUID = LockManager.unlockContainer(container);
             if (poppedUUID == null) {
                 sendMessage(sender, "&cThere is no lock on this container.");
                 return true;

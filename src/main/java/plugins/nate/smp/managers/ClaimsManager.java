@@ -26,6 +26,7 @@ public class ClaimsManager {
     private static final String CLAIM_TOOL_NBT = "claim_tool";
     private static final Map<Player, Location[]> playerSelections = new HashMap<>();
     private static final Map<UUID, Integer> borderDisplayTasks = new HashMap<>();
+    private static final Map<Claim, Set<UUID>> claimInvites = new HashMap<>();
 
 
     public static void loadClaims() {
@@ -62,6 +63,20 @@ public class ClaimsManager {
 
         claimTool.setItemMeta(claimToolMeta);
         player.getInventory().addItem(claimTool);
+    }
+
+    public static ItemStack claimTool() {
+        ItemStack claimTool = new ItemStack(Material.GOLDEN_SHOVEL);
+        ItemMeta claimToolMeta = claimTool.getItemMeta();
+
+        SMPUtils.changeItemName(claimToolMeta, "&aClaim Tool");
+        addItemLore(claimToolMeta, "");
+        addItemLore(claimToolMeta, "&a&oSelect 2 points to create a claim");
+        addItemLore(claimToolMeta, "&a&o/smp claim confirm to create your claim");
+        setItemNBT(claimToolMeta, CLAIM_TOOL_NBT);
+
+        claimTool.setItemMeta(claimToolMeta);
+        return claimTool;
     }
 
     public static boolean isClaimTool(@NotNull ItemStack item) {
@@ -318,6 +333,59 @@ public class ClaimsManager {
         }
 
         return false;
+    }
+
+    public static void sendClaimInvite(Player claimOwner, Player invitedPlayer, Claim claim) {
+//        ComponentBuilder tooltip = new ComponentBuilder()
+//                .append(net.md_5.bungee.api.ChatColor.GREEN + "[Click to accept invite]");
+//
+//        HoverEvent hoverEvent = new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text(tooltip.create()));
+//        ClickEvent clickEvent = new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/claim invite accept");
+//
+//        ComponentBuilder chatMessage = new ComponentBuilder()
+//                .append(net.md_5.bungee.api.ChatColor.GRAY + "Positions: " + ChatColor.GREEN + "[Hover to show]")
+//                .event(hoverEvent)
+//                .event(clickEvent);
+
+
+
+        // TODO: Specify which claim they invited the player to
+        claimInvites.computeIfAbsent(claim, k -> new HashSet<>()).add(invitedPlayer.getUniqueId());
+        sendMessage(claimOwner, PREFIX + "&7You have invited &a" + invitedPlayer.getName() + " &7to &a" + claim.getClaimName());
+        sendMessage(invitedPlayer, PREFIX + "&a" + claimOwner.getName() + " &7invited you to &a" + claim.getClaimName());
+
+        for (Map.Entry<Claim, Set<UUID>> entry : claimInvites.entrySet()) {
+            SMPUtils.severe(entry.getKey().getClaimName());
+        }
+    }
+
+    public static void acceptClaimInvite(Player player, Claim claim) {
+        Set<UUID> invitedPlayers = claimInvites.getOrDefault(claim, Collections.emptySet());
+        if (invitedPlayers.isEmpty()) {
+            sendMessage(player, PREFIX + "empty map");
+        }
+
+        for (Map.Entry<Claim, Set<UUID>> entry : claimInvites.entrySet()) {
+            SMPUtils.severe(entry.getKey().getClaimName());
+        }
+        if (invitedPlayers.remove(player.getUniqueId())) {
+            // Player was in the invite list and accepted the invite
+            sendMessage(player, "TEST1");
+            // TODO: Implement
+        } else {
+            sendMessage(player, PREFIX + "&cYou were not invited to " + claim.getClaimName());
+        }
+    }
+
+    public static void declineClaimInvite(Player player, Claim claim) {
+        Set<UUID> invitedPlayers = claimInvites.getOrDefault(claim, Collections.emptySet());
+        if (invitedPlayers.remove(player.getUniqueId())) {
+            sendMessage(player, "TEST2");
+            // Player was in the invite list and declined the invite
+            // TODO: Implement
+        } else {
+            sendMessage(player, PREFIX + "&cYou were not invited to " + claim.getClaimName());
+        }
     }
 
 }

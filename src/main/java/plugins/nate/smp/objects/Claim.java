@@ -6,6 +6,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Objects;
 import java.util.UUID;
 
 public class Claim {
@@ -63,5 +64,18 @@ public class Claim {
         if (!location.getWorld().equals(this.world)) return false;
         int x = location.getBlockX(), y = location.getBlockY(), z = location.getBlockZ();
         return x >= minX && x <= maxX && y >= minY && y <= maxY && z >= minZ && z <= maxZ;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Claim claim = (Claim) obj;
+        return Objects.equals(getClaimName(), claim.getClaimName()); // Assuming claimName is unique
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getClaimName());
     }
 }

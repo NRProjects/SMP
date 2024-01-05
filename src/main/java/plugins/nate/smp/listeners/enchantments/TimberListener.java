@@ -1,11 +1,6 @@
 package plugins.nate.smp.listeners.enchantments;
 
-import com.sk89q.worldedit.bukkit.BukkitAdapter;
-import com.sk89q.worldguard.WorldGuard;
-import com.sk89q.worldguard.protection.flags.Flags;
 import com.sk89q.worldguard.protection.flags.StateFlag;
-import com.sk89q.worldguard.protection.managers.RegionManager;
-import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -25,11 +20,6 @@ import java.util.stream.Collectors;
 
 
 public class TimberListener implements Listener {
-    private static final Set<StateFlag> antiBuildFlags = new HashSet<>();
-    static {
-        antiBuildFlags.add(Flags.BUILD);
-        antiBuildFlags.add(Flags.BLOCK_BREAK);
-    }
 
     private static final int MAX_BLOCKS = 192;
 
@@ -38,8 +28,6 @@ public class TimberListener implements Listener {
     public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
         ItemStack itemInHand = player.getInventory().getItemInMainHand();
-
-
 
         if (!itemInHand.containsEnchantment(EnchantmentManager.ENCHANTMENTS.get("timber"))) {
             return;
@@ -78,15 +66,7 @@ public class TimberListener implements Listener {
     }
 
     private void destroyTree(Block block, List<ItemStack> drops, AtomicInteger blocksDestroyed, Set<Block> checkedBlocks, Player player) {
-        RegionManager regionManager = WorldGuard.getInstance().getPlatform().getRegionContainer().get(BukkitAdapter.adapt(block.getLocation().getWorld()));
-
-        ProtectedRegion region = regionManager.getRegion("spawn");
-
-        if (region == null) {
-            return;
-        }
-
-        if (WorldGuardUtils.hasFlags(region, antiBuildFlags) && region.contains(block.getX(), block.getY(), block.getZ())) {
+        if (WorldGuardUtils.hasFlag(block.getLocation(), WorldGuardUtils.BANK_FLAG, StateFlag.State.DENY)) {
             return;
         }
 

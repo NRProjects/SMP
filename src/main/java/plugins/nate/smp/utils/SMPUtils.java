@@ -1,13 +1,10 @@
 package plugins.nate.smp.utils;
 
-import com.sk89q.worldedit.bukkit.BukkitAdapter;
-import com.sk89q.worldguard.WorldGuard;
-import com.sk89q.worldguard.protection.ApplicableRegionSet;
-import com.sk89q.worldguard.protection.flags.StateFlag;
-import com.sk89q.worldguard.protection.managers.RegionManager;
 import net.coreprotect.CoreProtect;
 import net.coreprotect.CoreProtectAPI;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandSender;
 import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.Plugin;
@@ -52,16 +49,7 @@ public class SMPUtils {
         SMP.getPlugin().getLogger().info(log);
     }
 
-    public static boolean isFlagAllowedAtLocation(StateFlag flag, Location location) {
-        World world = location.getWorld();
-        if (world == null) { return false; }
 
-        RegionManager firstRegionManager = WorldGuard.getInstance().getPlatform().getRegionContainer().get(BukkitAdapter.adapt(location.getWorld()));
-        if (firstRegionManager == null) { return false; }
-
-        ApplicableRegionSet firstSet = firstRegionManager.getApplicableRegions(BukkitAdapter.asBlockVector(location));
-        return firstSet.testState(null, flag);
-    }
 
     public static boolean isPickaxe(Material material) {
         return material == Material.WOODEN_PICKAXE ||

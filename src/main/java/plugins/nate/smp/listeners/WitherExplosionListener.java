@@ -5,8 +5,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityExplodeEvent;
-import plugins.nate.smp.SMP;
-import plugins.nate.smp.utils.SMPUtils;
+import plugins.nate.smp.utils.WorldGuardUtils;
 
 import java.util.List;
 import java.util.Objects;
@@ -17,7 +16,7 @@ public class WitherExplosionListener implements Listener {
         if (event.getEntityType() == EntityType.WITHER || event.getEntityType() == EntityType.WITHER_SKULL) {
             List<Block> toRemove = event.blockList().stream()
                     .filter(Objects::nonNull)
-                    .filter(block -> !SMPUtils.isFlagAllowedAtLocation(SMP.WITHER_EXPLOSIONS, block.getLocation()))
+                    .filter(block -> !WorldGuardUtils.isFlagAllowedAtLocation(WorldGuardUtils.WITHER_EXPLOSIONS, block.getLocation()))
                     .toList();
 
             event.blockList().removeAll(toRemove);

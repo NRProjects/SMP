@@ -66,7 +66,7 @@ public class TimberListener implements Listener {
     }
 
     private void destroyTree(Block block, List<ItemStack> drops, AtomicInteger blocksDestroyed, Set<Block> checkedBlocks, Player player) {
-        if (WorldGuardUtils.hasFlag(block.getLocation(), WorldGuardUtils.BANK_FLAG, StateFlag.State.DENY)) {
+        if (WorldGuardUtils.hasFlag(block.getLocation(), WorldGuardUtils.DISABLE_TIMBER, StateFlag.State.DENY)) {
             return;
         }
 

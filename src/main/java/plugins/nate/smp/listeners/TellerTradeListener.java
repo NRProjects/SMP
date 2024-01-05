@@ -22,11 +22,11 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 import org.joml.Math;
-import plugins.nate.smp.SMP;
 import plugins.nate.smp.guis.TellerDepositGUI;
 import plugins.nate.smp.utils.SMPUtils;
 import plugins.nate.smp.utils.TellerUtils;
 import plugins.nate.smp.utils.VaultUtils;
+import plugins.nate.smp.utils.WorldGuardUtils;
 
 import java.util.HashMap;
 import java.util.Optional;
@@ -110,7 +110,7 @@ public class TellerTradeListener implements Listener {
         BlockVector3 position = BlockVector3.at(loc.getX(), loc.getY(), loc.getZ());
 
         ApplicableRegionSet regionSet = regionManager.getApplicableRegions(position);
-        boolean isBankRegion = regionSet.queryState(null, SMP.BANK_FLAG) == StateFlag.State.ALLOW;
+        boolean isBankRegion = regionSet.queryState(null, WorldGuardUtils.BANK_FLAG) == StateFlag.State.ALLOW;
 
         if (isBankRegion) {
             double balance = VaultUtils.econ.getBalance(player);

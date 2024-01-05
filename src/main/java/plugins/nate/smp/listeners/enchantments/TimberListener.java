@@ -1,6 +1,11 @@
 package plugins.nate.smp.listeners.enchantments;
 
-import net.coreprotect.CoreProtectAPI;
+import com.sk89q.worldedit.bukkit.BukkitAdapter;
+import com.sk89q.worldguard.WorldGuard;
+import com.sk89q.worldguard.protection.flags.Flags;
+import com.sk89q.worldguard.protection.flags.StateFlag;
+import com.sk89q.worldguard.protection.managers.RegionManager;
+import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -11,18 +16,21 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.inventory.ItemStack;
 import plugins.nate.smp.SMP;
 import plugins.nate.smp.managers.EnchantmentManager;
-import plugins.nate.smp.utils.ChatUtils;
 import plugins.nate.smp.utils.SMPUtils;
+import plugins.nate.smp.utils.WorldGuardUtils;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import static plugins.nate.smp.utils.ChatUtils.PREFIX;
-import static plugins.nate.smp.utils.ChatUtils.sendMessage;
-
 
 public class TimberListener implements Listener {
+    private static final Set<StateFlag> antiBuildFlags = new HashSet<>();
+    static {
+        antiBuildFlags.add(Flags.BUILD);
+        antiBuildFlags.add(Flags.BLOCK_BREAK);
+    }
+
     private static final int MAX_BLOCKS = 192;
 
 
@@ -30,6 +38,8 @@ public class TimberListener implements Listener {
     public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
         ItemStack itemInHand = player.getInventory().getItemInMainHand();
+
+
 
         if (!itemInHand.containsEnchantment(EnchantmentManager.ENCHANTMENTS.get("timber"))) {
             return;
@@ -68,6 +78,18 @@ public class TimberListener implements Listener {
     }
 
     private void destroyTree(Block block, List<ItemStack> drops, AtomicInteger blocksDestroyed, Set<Block> checkedBlocks, Player player) {
+        RegionManager regionManager = WorldGuard.getInstance().getPlatform().getRegionContainer().get(BukkitAdapter.adapt(block.getLocation().getWorld()));
+
+        ProtectedRegion region = regionManager.getRegion("spawn");
+
+        if (region == null) {
+            return;
+        }
+
+        if (WorldGuardUtils.hasFlags(region, antiBuildFlags) && region.contains(block.getX(), block.getY(), block.getZ())) {
+            return;
+        }
+
         if (blocksDestroyed.get() >= MAX_BLOCKS || !isLog(block.getType()) || block.getType() == Material.AIR || checkedBlocks.contains(block)) {
             return;
         }

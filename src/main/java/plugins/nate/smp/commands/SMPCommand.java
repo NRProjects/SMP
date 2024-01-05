@@ -3,16 +3,19 @@ package plugins.nate.smp.commands;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
-import org.bukkit.block.Container;
 import org.bukkit.block.Sign;
 import org.bukkit.block.sign.Side;
-import org.bukkit.command.*;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
 import plugins.nate.smp.managers.TrustManager;
 import plugins.nate.smp.utils.ChatUtils;
 import plugins.nate.smp.utils.SMPUtils;
+import plugins.nate.smp.utils.TellerUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -20,8 +23,8 @@ import java.util.stream.Collectors;
 import static plugins.nate.smp.utils.ChatUtils.sendMessage;
 
 public class SMPCommand implements CommandExecutor, TabCompleter {
-    private static final Set<String> VALID_SUBCOMMANDS = Set.of("help", "features", "reload", "forcelock", "lockholder", "trust", "untrust", "trustlist", "lock", "unlock");
-
+    private static final Set<String> VALID_SUBCOMMANDS = Set.of("help", "features", "reload", "forcelock", "lockholder", "teller", "trust", "untrust", "trustlist", "lock", "unlock");
+    
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (args.length == 0) {
@@ -74,7 +77,36 @@ public class SMPCommand implements CommandExecutor, TabCompleter {
             sign.getSide(Side.FRONT).setLine(1, offlinePlayer.getName());
             sign.setWaxed(true);
             sign.update();
+        } else if (args[0].equalsIgnoreCase("teller")) {
+            if (!(sender instanceof Player player)) {
+                sendMessage(sender, "&cOnly players can use this command!");
+                return true;
+            }
 
+            if (!sender.hasPermission("smp.createteller")) {
+                sendMessage(sender, ChatUtils.PREFIX + ChatUtils.DENIED_COMMAND);
+                return true;
+            }
+
+            if (args.length == 1) {
+                sendMessage(sender, ChatUtils.PREFIX + "&cUsage: /smp teller (deposit/withdraw)");
+                return true;
+            }
+
+            if (args[1].equalsIgnoreCase("deposit")) {
+                TellerUtils.createDepositTeller(player);
+                sendMessage(sender, ChatUtils.PREFIX + "&7Spawning a &adeposit &7teller.");
+                return true;
+            }
+
+            if (args[1].equalsIgnoreCase("withdraw")) {
+                TellerUtils.createWithdrawTeller(player);
+                sendMessage(sender, ChatUtils.PREFIX + "&7Spawning a &awithdraw &7teller.");
+                return true;
+            }
+
+            sendMessage(sender, ChatUtils.PREFIX + "&cUsage: /smp teller (deposit/withdraw)");
+            return true;
         } else if (args[0].equalsIgnoreCase("lockholder")) {
             if (!(sender instanceof Player player)) {
                 sendMessage(sender, "&cOnly players can use this command!");

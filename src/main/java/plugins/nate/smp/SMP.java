@@ -11,10 +11,7 @@ import plugins.nate.smp.managers.ElytraGlidingTracker;
 import plugins.nate.smp.managers.EnchantmentManager;
 import plugins.nate.smp.managers.RecipeManager;
 import plugins.nate.smp.managers.TrustManager;
-import plugins.nate.smp.utils.CommandRegistration;
-import plugins.nate.smp.utils.DependencyUtils;
-import plugins.nate.smp.utils.EventRegistration;
-import plugins.nate.smp.utils.SMPUtils;
+import plugins.nate.smp.utils.*;
 
 import java.io.File;
 import java.util.logging.Logger;
@@ -24,6 +21,7 @@ public final class SMP extends JavaPlugin {
     private static CoreProtectAPI coreProtect;
 
     public static StateFlag WITHER_EXPLOSIONS;
+    public static StateFlag BANK_FLAG;
 
     public static final Logger logger = Logger.getLogger("Minecraft");
     public final File prefixesFile = new File(getDataFolder() + "/prefixes.yml");
@@ -40,6 +38,7 @@ public final class SMP extends JavaPlugin {
 
         DependencyUtils.checkDependencies();
         EventRegistration.registerEvents(this);
+        VaultUtils.setupEconomy(this);
         CommandRegistration.registerCommands(this);
         EnchantmentManager.registerEnchants();
         RecipeManager.registerRecipes();
@@ -53,9 +52,13 @@ public final class SMP extends JavaPlugin {
         FlagRegistry registry = WorldGuard.getInstance().getFlagRegistry();
         try {
             StateFlag witherExplosionsFlag = new StateFlag("wither-explosions", true);
+            StateFlag bankFlag = new StateFlag("bank", false);
+
             registry.register(witherExplosionsFlag);
+            registry.register(bankFlag);
 
             WITHER_EXPLOSIONS = witherExplosionsFlag;
+            BANK_FLAG = bankFlag;
         } catch (FlagConflictException ignored) {}
     }
 
@@ -66,6 +69,7 @@ public final class SMP extends JavaPlugin {
     public static CoreProtectAPI getCoreProtect() {
         return coreProtect;
     }
+
 
 }
 

@@ -25,5 +25,6 @@ public class EventRegistration {
         pm.registerEvents(new AntiEntityGriefListener(), plugin);
         pm.registerEvents(new ElytraFallListener(), plugin);
         pm.registerEvents(new ExpandedRocketCraftingListener(), plugin);
+        pm.registerEvents(new TellerTradeListener(), plugin);
     }
 }

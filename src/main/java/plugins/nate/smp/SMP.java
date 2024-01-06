@@ -6,6 +6,7 @@ import com.sk89q.worldguard.protection.flags.registry.FlagConflictException;
 import com.sk89q.worldguard.protection.flags.registry.FlagRegistry;
 import net.coreprotect.CoreProtectAPI;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import plugins.nate.smp.managers.ElytraGlidingTracker;
 import plugins.nate.smp.managers.EnchantmentManager;
@@ -60,6 +61,13 @@ public final class SMP extends JavaPlugin {
             WITHER_EXPLOSIONS = witherExplosionsFlag;
             BANK_FLAG = bankFlag;
         } catch (FlagConflictException ignored) {}
+    }
+
+    public void onDisable() {
+        for(Player p : plugin.getServer().getOnlinePlayers()) {
+            // Prevents bug regarding players interacting with tellers during shutdown
+            p.closeInventory();
+        }
     }
 
     public static SMP getPlugin() {

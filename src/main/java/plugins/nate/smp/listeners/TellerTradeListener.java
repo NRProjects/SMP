@@ -6,6 +6,8 @@ import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.flags.StateFlag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
+
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -15,6 +17,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.Inventory;
@@ -24,12 +27,14 @@ import org.bukkit.persistence.PersistentDataType;
 import org.joml.Math;
 import plugins.nate.smp.SMP;
 import plugins.nate.smp.guis.TellerDepositGUI;
+import plugins.nate.smp.guis.TellerWithdrawGUI;
 import plugins.nate.smp.utils.SMPUtils;
 import plugins.nate.smp.utils.TellerUtils;
 import plugins.nate.smp.utils.VaultUtils;
 
 import java.util.HashMap;
 import java.util.Optional;
+import java.util.UUID;
 
 import static plugins.nate.smp.utils.ChatUtils.*;
 import static plugins.nate.smp.utils.TellerUtils.CURRENCY_SYMBOL;
@@ -37,7 +42,7 @@ import static plugins.nate.smp.utils.TellerUtils.CURRENCY_SYMBOL;
 
 public class TellerTradeListener implements Listener {
     private enum SOUND_EFFECTS { SUCCESS, ERROR, NEUTRAL }
-    
+    private final HashMap<UUID, Integer> initialDiamonds = new HashMap<>();
     @EventHandler
     public void onTellerInteract(PlayerInteractEntityEvent event) {
         Entity clickedEntity = event.getRightClicked();
@@ -53,12 +58,12 @@ public class TellerTradeListener implements Listener {
         if (tellerKey == null || tellerKey.equals("")) {
             SMPUtils.severe(player.getName() + " tried to interact with a null teller at location X: " +
                     clickedEntity.getLocation().getX() + " Y: " + clickedEntity.getLocation().getY() + " Z: " + clickedEntity.getLocation().getZ());
-            sendMessage(player, PREFIX + "&cAn error has occured. Please contact staff or make a ticket in the discord: discord.gg/coolment");
+            sendMessage(player, PREFIX + "&cAn error has occurred. Please contact staff or make a ticket in the discord: discord.gg/coolment");
             return;
         }
 
         switch (tellerKey.toLowerCase()) {
-            case "withdraw" -> handleWithdraw(player);
+            case "withdraw" -> handleWithdrawGUI(player);
             case "deposit" -> handleDeposit(player);
             default -> sendMessage(player, PREFIX + "&cThis teller does not have a valid TELLER_KEY. Contact an admin.");
         }
@@ -74,7 +79,7 @@ public class TellerTradeListener implements Listener {
         LivingEntity teller = event.getEntity();
         if (!teller.getPersistentDataContainer().has(TellerUtils.TELLER_TYPE_KEY, PersistentDataType.STRING)) {
             return;
-        };
+        }
         
         Optional<Entity> textDisplay = teller.getWorld().getNearbyEntities(teller.getLocation().add(0, 2.4, 0), .1, .1, .1)
             .stream()
@@ -83,9 +88,7 @@ public class TellerTradeListener implements Listener {
             .filter(entity -> entity.getPersistentDataContainer().get(TellerUtils.PARENT_TELLER_KEY, PersistentDataType.STRING).equals(teller.getUniqueId().toString()))
             .findFirst();
 
-        if (textDisplay.isPresent()) {
-            textDisplay.get().remove();
-        }
+        textDisplay.ifPresent(Entity::remove);
     }
 
     /*
@@ -113,10 +116,7 @@ public class TellerTradeListener implements Listener {
         boolean isBankRegion = regionSet.queryState(null, SMP.BANK_FLAG) == StateFlag.State.ALLOW;
 
         if (isBankRegion) {
-            double balance = VaultUtils.econ.getBalance(player);
-            String formattedBalance = String.format("%.2f", balance);
-
-            createActionBar(player, "&7Balance: &a" + formattedBalance + CURRENCY_SYMBOL);
+            displayBalance(player);
         } else {
             player.sendTitle("", "", 0, 0, 0);
         }
@@ -161,6 +161,7 @@ public class TellerTradeListener implements Listener {
         boolean success = VaultUtils.deposit(player, totalValue);
         if (success) {
             sendMessage(player, PREFIX + "&aSuccessfully deposited " + (int) totalValue + CURRENCY_SYMBOL);
+            displayBalance(player);
             inventory.clear();
         } else {
             sendMessage(player, PREFIX + "&cTransaction failed!");
@@ -169,14 +170,15 @@ public class TellerTradeListener implements Listener {
     }
 
     @EventHandler
-    public void onDepositGUIClick(InventoryClickEvent event) {
+    public void onTellerGUIClick(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player)) {
             return;
         }
 
         Inventory clickedInventory = event.getView().getTopInventory();
 
-        if (clickedInventory.getHolder() instanceof TellerDepositGUI) {
+        if (clickedInventory.getHolder() instanceof TellerDepositGUI ||
+            clickedInventory.getHolder() instanceof TellerWithdrawGUI) {
             Player player = (Player) event.getWhoClicked();
 
             ItemStack clickedItem = event.getCurrentItem();
@@ -188,59 +190,127 @@ public class TellerTradeListener implements Listener {
         }
     }
 
+    // Used to prevent a bug where players can drop items they dont have the funds for anymore
+    @EventHandler 
+    public void onTellerGUIToss(PlayerDropItemEvent event) {
+        Player player = event.getPlayer();
+        if (!(hasTellerInventoryOpen(player))) {
+            return; 
+        }
+        event.setCancelled(true);
+        sendMessage(player, PREFIX + "&cYou can't drop items while interracting with a teller.");
+        playSound(player, SOUND_EFFECTS.ERROR);
+    }
+
+    @EventHandler
+    public void onWithdrawGUIClose(InventoryCloseEvent event) {
+        InventoryHolder holder = event.getInventory().getHolder();
+        if (!(holder instanceof TellerWithdrawGUI)) {
+            return;
+        }
+        if (!(event.getPlayer() instanceof Player player)) {
+            return;
+        }
+
+        int currentDiamonds = countDiamonds(event.getView().getTopInventory().getContents());
+        int diff = initialDiamonds.getOrDefault(event.getPlayer().getUniqueId(), 0) - currentDiamonds;
+
+        if (diff == 0) {
+            return;
+        }
+
+        if (diff > 0) {
+            VaultUtils.withdraw(player, diff);
+            sendMessage(player, PREFIX + "&aSuccessfully withdrew " + diff + CURRENCY_SYMBOL);
+        } else {
+            int deposited = Math.abs(diff);
+            VaultUtils.deposit(player, deposited);
+            sendMessage(player, PREFIX + "&aSuccessfully deposited " + deposited + CURRENCY_SYMBOL);
+            displayBalance(player);
+        }
+    }
+
     /*
     * Methods for handling withdraws
     * */
-
-    private void handleWithdraw(Player player) {
+    private void handleWithdrawGUI(Player player) {
         double playerBalance = VaultUtils.getBalance(player);
 
-        if (playerBalance < 1.0) {
-            sendMessage(player, PREFIX + "&cYou have no funds to withdraw!");
-            playSound(player, SOUND_EFFECTS.ERROR);
-            return;
-        }
+        Inventory tellerUI = new TellerWithdrawGUI().getInventory();
 
-        double amountToWithdraw;
-        ItemStack withdrawalItem;
+        int inventorySlots = tellerUI.getSize();
+        ItemStack[] tellerItems = new ItemStack[inventorySlots];
+        double balanceToAdd = playerBalance;
+        for (int i = 0; i < tellerItems.length; i++) {
+            ItemStack diamondStack = new ItemStack(Material.AIR);
 
-        if (player.isSneaking()) {
-            if (playerBalance >= 9.0) {
-                int maxBlocks = (int) Math.min(playerBalance / 9.0, 64);
-                withdrawalItem = new ItemStack(Material.DIAMOND_BLOCK, maxBlocks);
-                amountToWithdraw = maxBlocks * 9.0;
-            } else {
-                int maxDiamonds = (int) Math.min(playerBalance, 64);
-                withdrawalItem = new ItemStack(Material.DIAMOND, maxDiamonds);
-                amountToWithdraw = maxDiamonds;
+            if (balanceToAdd >= 9) {
+                diamondStack.setType(Material.DIAMOND_BLOCK);
+
+                // 576 is the amount in a stack of blocks
+                if (balanceToAdd > 576) {
+                    diamondStack.setAmount(64);
+                    balanceToAdd -= 576;
+                } else {
+                    double blocksToAdd = Math.floor(balanceToAdd / 9);
+                    diamondStack.setAmount((int) blocksToAdd);
+                    balanceToAdd -= blocksToAdd * 9;
+                }
+            } else if (balanceToAdd >= 1) {
+                diamondStack.setType(Material.DIAMOND);
+                diamondStack.setAmount((int) balanceToAdd);
+                balanceToAdd = 0;
             }
-        } else {
-            if (playerBalance < 9.0) {
-                withdrawalItem = new ItemStack(Material.DIAMOND);
-                amountToWithdraw = 1.0;
-            } else {
-                withdrawalItem = new ItemStack(Material.DIAMOND_BLOCK);
-                amountToWithdraw = 9.0;
-            }
+
+            tellerItems[i] = diamondStack;
         }
 
-        if (!player.getInventory().addItem(withdrawalItem).isEmpty()) {
-            sendMessage(player, PREFIX + "&cYou don't have enough inventory space.");
-            playSound(player, SOUND_EFFECTS.ERROR);
-            return;
-        }
+        // Used for determining how many diamonds were pulled from the bank
+        initialDiamonds.put(player.getUniqueId(), countDiamonds(tellerItems));
 
-        boolean success = VaultUtils.withdraw(player, amountToWithdraw);
-        if (success) {
-            sendMessage(player, PREFIX + "&aSuccessfully withdrew " + (int) amountToWithdraw + CURRENCY_SYMBOL);
-        } else {
-            sendMessage(player, PREFIX + "&cAn error has occurred");
-        }
+        tellerUI.addItem(tellerItems);
+
+        player.openInventory(tellerUI);
     }
 
     /*
     * Helper methods
     * */
+
+    private boolean hasTellerInventoryOpen(Player player) {
+        if (player.getOpenInventory() == null) {
+            return false;
+        }
+        Inventory topInventory = player.getOpenInventory().getTopInventory();
+        if (topInventory.getHolder() instanceof TellerDepositGUI ||
+            topInventory.getHolder() instanceof TellerWithdrawGUI) {
+                return true;
+        }
+        return false;
+    }
+
+
+    /**
+     * Creates an action bar to display a player their balance
+     */
+    private void displayBalance(Player player) {
+        createActionBar(player, "&7Balance: &a" + String.format("%.2f", VaultUtils.econ.getBalance(player)) + CURRENCY_SYMBOL);
+    }
+
+    private int countDiamonds(ItemStack[] items) {
+        int diamondCount = 0;
+        for (ItemStack item: items) {
+            if (item == null) {
+                continue;
+            }
+            if (item.getType() == Material.DIAMOND_BLOCK) {
+                diamondCount += item.getAmount() * 9;
+            } else if (item.getType() == Material.DIAMOND) {
+                diamondCount += item.getAmount();
+            }
+        }
+        return diamondCount;
+    }
 
     private void playSound(Player player, SOUND_EFFECTS sound) {
         if (sound == SOUND_EFFECTS.SUCCESS) {

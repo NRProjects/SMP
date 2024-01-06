@@ -6,13 +6,13 @@ import org.bukkit.inventory.Inventory;
 import plugins.nate.smp.SMP;
 import plugins.nate.smp.interfaces.CustomGUI;
 
-public class TellerDepositGUI implements CustomGUI {
+public class TellerWithdrawGUI implements CustomGUI {
     private final Inventory inventory;
     private final NamespacedKey key;
 
-    public TellerDepositGUI() {
-        this.key = new NamespacedKey(SMP.getPlugin(), "deposit_gui");
-        this.inventory = Bukkit.createInventory(this, 36, "Deposit Diamonds");
+    public TellerWithdrawGUI() {
+        this.key = new NamespacedKey(SMP.getPlugin(), "withdraw_gui");
+        this.inventory = Bukkit.createInventory(this, 36, "Withdraw Diamonds");
     }
 
     @Override

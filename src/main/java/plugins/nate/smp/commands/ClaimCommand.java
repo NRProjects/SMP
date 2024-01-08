@@ -9,7 +9,6 @@ import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -22,10 +21,10 @@ import plugins.nate.smp.managers.ClaimsManager;
 import plugins.nate.smp.objects.Claim;
 import plugins.nate.smp.storage.SMPDatabase;
 import plugins.nate.smp.utils.DatabaseUtils;
-import plugins.nate.smp.utils.SMPUtils;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -41,10 +40,10 @@ public class ClaimCommand implements CommandExecutor, TabCompleter {
         }
 
         if (args.length == 0) {
-            return handleHelpCommand(player, args);
+            handleHelpCommand(player, args);
         }
 
-        return switch (args[0].toLowerCase()) {
+        switch (args[0].toLowerCase()) {
             case "help" -> handleHelpCommand(player, args);
             case "tool" -> handleToolCommand(player);
             case "showborder" -> handleShowBorderCommand(player, args);
@@ -52,8 +51,12 @@ public class ClaimCommand implements CommandExecutor, TabCompleter {
             case "info" -> handleInfoCommand(player, args);
             case "list" -> handleListCommand(player);
             case "invite" -> handleInviteCommand(player, args);
+            case "accept" -> handleAcceptCommand(player, args);
+            case "decline" -> handleDeclineCommand(player, args);
             default -> handleIncorrectCommandUsage(player);
-        };
+        }
+
+        return true;
     }
 
     @Nullable
@@ -103,27 +106,25 @@ public class ClaimCommand implements CommandExecutor, TabCompleter {
     * Sub command methods below
     * */
 
-    private static boolean handleIncorrectCommandUsage(Player player) {
+    private static void handleIncorrectCommandUsage(Player player) {
         sendMessage(player, PREFIX + "&cUnknown command. Type /claim help for help.");
-        return true;
     }
 
-    private static boolean handleToolCommand(Player player) {
+    private static void handleToolCommand(Player player) {
         Inventory inventory = player.getInventory();
         if (inventory.contains(ClaimsManager.claimTool())) {
             sendMessage(player, PREFIX + "&cYou already have a claim tool in your inventory!");
-            return true;
+            return;
         }
 
         ClaimsManager.giveClaimTool(player);
         sendMessage(player, PREFIX + "&aGranted claim tool in inventory");
-        return true;
     }
 
-    private static boolean handleHelpCommand(Player player, String[] args) {
+    private static void handleHelpCommand(Player player, String[] args) {
         if (args.length > 1) {
             handleIncorrectCommandUsage(player);
-            return true;
+            return;
         }
 
         sendMessage(player, "&8&m------------------------&8&l[&a&lSMP&8&l]&8&m------------------------");
@@ -133,14 +134,14 @@ public class ClaimCommand implements CommandExecutor, TabCompleter {
         sendMessage(player, "&a/claim invite <username> <claim name> &7- Invites a player to a specific claim");
         sendMessage(player, "&a/claim info &7- Shows info on claim you're standing in");
         sendMessage(player, "&a/claim showborder &7- Shows the border of the claim you're standing in");
-
-        return true;
+        sendMessage(player, "&a/claim accept <claim name> &7- Accept a pending claim invite");
+        sendMessage(player, "&a/claim decline <claim name> &7- Decline a pending claim invite");
     }
 
-    private static boolean handleShowBorderCommand(Player player, String[] args) {
+    private static void handleShowBorderCommand(Player player, String[] args) {
         if (args.length > 1) {
             handleIncorrectCommandUsage(player);
-            return true;
+            return;
         }
 
         Claim claim = ClaimsManager.getClaimAtLocation(player.getLocation());
@@ -148,43 +149,40 @@ public class ClaimCommand implements CommandExecutor, TabCompleter {
         if (claim == null) {
             sendMessage(player, PREFIX + "&cYou must be standing in a claim to display its borders!");
 
-            return true;
+            return;
         }
 
         ClaimsManager.toggleClaimBorder(claim, player);
-        return true;
     }
 
-    private static boolean handleCreateCommand(Player player, String[] args) {
+    private static void handleCreateCommand(Player player, String[] args) {
         if (args.length != 2) {
             sendMessage(player, PREFIX + "&&cUsage: /claim create <claim name>");
 
-            return true;
+            return;
         }
 
         if (ClaimsManager.hasNullSelectionPoint(player)) {
             sendMessage(player, PREFIX + "&cYou must select two points to make a claim!");
 
-            return true;
+            return;
         }
 
         String claimName = args[1];
 
         if (ClaimsManager.claimNameAlreadyExists(claimName)) {
             sendMessage(player, PREFIX + "&cClaim name is already taken!");
-            return true;
+            return;
         }
 
         Claim claim = new Claim(ClaimsManager.getPoints(player), player.getUniqueId(), claimName);
         ClaimsManager.createClaim(claim);
-
-        return true;
     }
 
-    private static boolean handleInfoCommand(Player player, String[] args) {
+    private static void handleInfoCommand(Player player, String[] args) {
         if (args.length > 1) {
             handleIncorrectCommandUsage(player);
-            return true;
+            return;
         }
 
         Claim claim = ClaimsManager.getClaimAtLocation(player.getLocation());
@@ -192,7 +190,7 @@ public class ClaimCommand implements CommandExecutor, TabCompleter {
         if (claim == null) {
             sendMessage(player, PREFIX + "&cYou are not in a claim!");
 
-            return true;
+            return;
         }
 
         ClaimsManager.displayClaimBorder(claim, player);
@@ -204,20 +202,17 @@ public class ClaimCommand implements CommandExecutor, TabCompleter {
         sendMessage(player, createPosTooltip(claim));
         sendMessage(player, toggleClaimBorder());
         sendMessage(player, "&7Members: &a");
-
-        return true;
     }
 
-    private static boolean handleInviteCommand(Player player, String[] args) {
+    private static void handleInviteCommand(Player player, String[] args) {
         if (args.length != 3) {
             sendMessage(player, PREFIX + "&cUsage: /claim invite <username> <claim name>");
-            sendMessage(player, PREFIX + "&cUsage: /claim invite <accept|decline> <claim name>");
-            return true;
+            return;
         }
 
         if (!ClaimsManager.hasClaim(player)) {
             sendMessage(player, PREFIX + "&cYou currently do not have any claims! Create one with /claim create");
-            return true;
+            return;
         }
 
         String invitedPlayerName = args[1];
@@ -226,81 +221,80 @@ public class ClaimCommand implements CommandExecutor, TabCompleter {
         Claim claim = ClaimsManager.getClaimFromName(claimName);
         if (claim == null) {
             sendMessage(player, PREFIX + "&cClaim \"" + claimName + "\" does not exist!");
-            return true;
-        }
-
-        SMPUtils.log(claim.toString());
-
-        if (args[1].equalsIgnoreCase("accept")) {
-            // TODO: Implement
-            ClaimsManager.acceptClaimInvite(player, claim);
-            return true;
-        } else if (args[1].equalsIgnoreCase("decline")) {
-            // TODO: Implement
-            ClaimsManager.declineClaimInvite(player, claim);
-            return true;
+            return;
         }
 
         if (!ClaimsManager.isOwnerOfClaim(player, claim)) {
             sendMessage(player, PREFIX + "&cYou are not the owner \"" + claimName + "\"! You cannot invite people to claims you don't own!");
-            return true;
+            return;
         }
 
         OfflinePlayer invitedPlayer = Bukkit.getOfflinePlayer(invitedPlayerName);
 
         if (!invitedPlayer.hasPlayedBefore()) {
             sendMessage(player, PREFIX + "&cPlayer \"" + invitedPlayerName + "\" must be online when inviting them" );
-            return true;
+            return;
         }
 
         if (!invitedPlayer.isOnline()) {
             sendMessage(player, PREFIX + "&c" + invitedPlayerName + " must be online to invite them!");
-            return true;
+            return;
         }
 
         // TODO: Implement
         ClaimsManager.sendClaimInvite(player, (Player) invitedPlayer, claim);
         sendMessage(player, PREFIX + "Implement successful invite");
-        return true;
     }
 
-    private static boolean handleListCommand(Player player) {
+    private static void handleListCommand(Player player) {
         ResultSet rs = SMPDatabase.queryDB("SELECT * FROM claims WHERE OwnerUUID = ?;", player.getUniqueId().toString());
 
         try {
-            int rowCount = 0;
+            List<Claim> claimList = new ArrayList<>();
+
             while (rs.next()) {
-                rowCount++;
-            }
-
-            rs.beforeFirst();
-
-            if (rs.next()) {
                 String claimName = rs.getString("ClaimName");
                 UUID ownerUUID = UUID.fromString(rs.getString("OwnerUUID"));
-                World world = Bukkit.getWorld(rs.getString("World"));
                 Location[] points = DatabaseUtils.getClaimPointsFromDatabase(rs);
 
                 Claim claim = new Claim(points, ownerUUID, claimName);
-
-                if (rowCount == 1) {
-
-                } else {
-
-                }
-
-
-                // User has claims
-                sendMessage(player, "test");
-
-            } else {
-                // User has no claims
-                sendMessage(player, PREFIX + "&cYou do not have any claims! Get started with /claim help");
+                claimList.add(claim);
             }
+
+            if (claimList.isEmpty()) {
+                sendMessage(player, PREFIX + "&cYou do not have any claims! Get started with /claim help");
+                return;
+            }
+
+            claimList.forEach(claim -> {
+                sendMessage(player, claim.getClaimName());
+            });
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
 
-        return true;
+    private static void handleAcceptCommand(Player player, String[] args) {
+        String claimName = args[1];
+
+        Claim claim = ClaimsManager.getClaimFromName(claimName);
+        if (claim == null) {
+            sendMessage(player, PREFIX + "&cClaim \"" + claimName + "\" does not exist!");
+            return;
+        }
+
+        ClaimsManager.acceptClaimInvite(player, claim);
+    }
+
+    private static void handleDeclineCommand(Player player, String[] args) {
+        String claimName = args[1];
+
+        Claim claim = ClaimsManager.getClaimFromName(claimName);
+        if (claim == null) {
+            sendMessage(player, PREFIX + "&cClaim \"" + claimName + "\" does not exist!");
+            return;
+        }
+
+        ClaimsManager.acceptClaimInvite(player, claim);
     }
 }

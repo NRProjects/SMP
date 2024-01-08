@@ -176,7 +176,14 @@ public class ClaimCommand implements CommandExecutor, TabCompleter {
         }
 
         Claim claim = new Claim(ClaimsManager.getPoints(player), player.getUniqueId(), claimName);
-        ClaimsManager.createClaim(claim);
+        boolean success = ClaimsManager.createClaim(claim);
+
+        if (success) {
+            ClaimsManager.playerSelections.remove(player);
+            sendMessage(player, PREFIX + "&aClaim created successfully!");
+        } else {
+            sendMessage(player, PREFIX + "&cTherre was an error creating your claim!");
+        }
     }
 
     private static void handleInfoCommand(Player player, String[] args) {

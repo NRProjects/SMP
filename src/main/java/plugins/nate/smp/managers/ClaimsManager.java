@@ -24,7 +24,7 @@ import static plugins.nate.smp.utils.SMPUtils.setItemNBT;
 public class ClaimsManager {
     public static List<Claim> claims = new ArrayList<>();
     private static final String CLAIM_TOOL_NBT = "claim_tool";
-    private static final Map<Player, Location[]> playerSelections = new HashMap<>();
+    public static final Map<Player, Location[]> playerSelections = new HashMap<>();
     private static final Map<UUID, Integer> borderDisplayTasks = new HashMap<>();
     private static final Map<Claim, Set<UUID>> claimInvites = new HashMap<>();
 
@@ -122,10 +122,10 @@ public class ClaimsManager {
         return points[0] == null || points[1] == null;
     }
 
-    public static void createClaim(Claim claim) {
+    public static boolean createClaim(Claim claim) {
         if (doesClaimOverlap(claim)) {
             sendMessage(Bukkit.getPlayer(claim.getOwner()), PREFIX + "&cFailed to create a claim. Part of your selection is already claimed!");
-            return;
+            return false;
         }
 
         SMPDatabase.queryDB("INSERT INTO claims (ClaimName, OwnerUUID, World, MaxX, MaxY, MaxZ, MinX, MinY, MinZ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);",
@@ -141,8 +141,7 @@ public class ClaimsManager {
                 claim.getMinX(), claim.getMinY(), claim.getMinZ());
 
         claims.add(claim);
-
-        sendMessage(Bukkit.getPlayer(claim.getOwner()), PREFIX + "&aYou have created your claim");
+        return true;
     }
 
     public static Claim getClaimAtLocation(Location location) {

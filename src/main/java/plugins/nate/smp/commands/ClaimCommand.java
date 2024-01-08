@@ -182,7 +182,7 @@ public class ClaimCommand implements CommandExecutor, TabCompleter {
             ClaimsManager.playerSelections.remove(player);
             sendMessage(player, PREFIX + "&aClaim created successfully!");
         } else {
-            sendMessage(player, PREFIX + "&cTherre was an error creating your claim!");
+            sendMessage(player, PREFIX + "&cThere was an error creating your claim!");
         }
     }
 

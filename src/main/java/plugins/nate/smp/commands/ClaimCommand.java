@@ -41,6 +41,7 @@ public class ClaimCommand implements CommandExecutor, TabCompleter {
 
         if (args.length == 0) {
             handleHelpCommand(player, args);
+            return true;
         }
 
         switch (args[0].toLowerCase()) {
@@ -53,6 +54,7 @@ public class ClaimCommand implements CommandExecutor, TabCompleter {
             case "invite" -> handleInviteCommand(player, args);
             case "accept" -> handleAcceptCommand(player, args);
             case "decline" -> handleDeclineCommand(player, args);
+            case "delete" -> handleDeleteCommand(player, args);
             default -> handleIncorrectCommandUsage(player);
         }
 
@@ -302,6 +304,10 @@ public class ClaimCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
-        ClaimsManager.acceptClaimInvite(player, claim);
+        ClaimsManager.declineClaimInvite(player, claim);
+    }
+
+    private static void handleDeleteCommand(Player player, String[] args) {
+        //TODO: Implement claim deletions
     }
 }

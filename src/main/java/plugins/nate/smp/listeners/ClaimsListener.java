@@ -13,6 +13,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import plugins.nate.smp.managers.ClaimsManager;
 import plugins.nate.smp.objects.Claim;
@@ -27,6 +28,8 @@ import static plugins.nate.smp.utils.ChatUtils.sendMessage;
 public class ClaimsListener implements Listener {
     private static final Map<UUID, Claim> lastClaimMap = new HashMap<>();
     private static final Map<UUID, Player> eggThrowers = new HashMap<>();
+    private static final int INITIAL_CLAIM_BLOCK_COUNT = 100_000;
+
 
     @EventHandler
     public void onClaimToolUse(PlayerInteractEvent event) {
@@ -146,5 +149,12 @@ public class ClaimsListener implements Listener {
             }
 
         }
+    }
+
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event) {
+
+
+        ClaimsManager.addClaimBlocksToPlayer(event.getPlayer().getUniqueId(), INITIAL_CLAIM_BLOCK_COUNT);
     }
 }

@@ -352,10 +352,6 @@ public class ClaimsManager {
         claimInvites.computeIfAbsent(claim, k -> new HashSet<>()).add(invitedPlayer.getUniqueId());
         sendMessage(claimOwner, PREFIX + "&7You have invited &a" + invitedPlayer.getName() + " &7to &a" + claim.getClaimName());
         sendMessage(invitedPlayer, PREFIX + "&a" + claimOwner.getName() + " &7invited you to &a" + claim.getClaimName());
-
-        for (Map.Entry<Claim, Set<UUID>> entry : claimInvites.entrySet()) {
-            SMPUtils.severe(entry.getKey().getClaimName());
-        }
     }
 
     public static void acceptClaimInvite(Player player, Claim claim) {
@@ -364,9 +360,6 @@ public class ClaimsManager {
             sendMessage(player, PREFIX + "empty map");
         }
 
-        for (Map.Entry<Claim, Set<UUID>> entry : claimInvites.entrySet()) {
-            SMPUtils.severe(entry.getKey().getClaimName());
-        }
         if (invitedPlayers.remove(player.getUniqueId())) {
             // Player was in the invite list and accepted the invite
             sendMessage(player, "TEST1");
@@ -385,6 +378,12 @@ public class ClaimsManager {
         } else {
             sendMessage(player, PREFIX + "&cYou were not invited to " + claim.getClaimName());
         }
+    }
+
+    public static void addClaimBlocksToPlayer(UUID playerUUID, int claimBlockAmount) {
+        SMPDatabase.queryDB("INSERT INTO players (PlayerUUID, MaxClaimBlocks) " +
+                        "SELECT ?, ? WHERE NOT EXISTS (SELECT 1 FROM players WHERE PlayerUUID = ?);",
+                playerUUID.toString(), claimBlockAmount, playerUUID.toString());
     }
 
 }

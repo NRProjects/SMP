@@ -38,8 +38,8 @@ public class SMPDatabase {
 
             try (Statement statement = connection.createStatement()) {
                 String sql = "CREATE TABLE IF NOT EXISTS players (" +
-                        "PlayerUUID INTEGER PRIMARY KEY AUTOINCREMENT," +
-                        "MaxBlocks INTEGER);";
+                        "PlayerUUID TEXT PRIMARY KEY," +
+                        "MaxClaimBlocks INTEGER);";
 
                 statement.execute(sql);
             }
